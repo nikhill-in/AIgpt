@@ -11,6 +11,6 @@ const connectMongo = async ()=>{
         process.exit(1);
     }
 };
-connectMongo();
+// connectMongo();
 
 export default connectMongo;
