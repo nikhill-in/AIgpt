@@ -10,6 +10,7 @@ function App() {
   return (
     <>
      <h2>An AI chat bot...</h2>
+     <p>chat bot</p>
     </>
   )
 }
