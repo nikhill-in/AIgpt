@@ -12,8 +12,8 @@ export default function Navbar({ onLoginClick }) {
 
       <ul className="zc-nav-links">
         <li><a href="#features">Features</a></li>
-        <li><a href="#pricing">Pricing</a></li>
-        <li><a href="#docs">Docs</a></li>
+        {/* <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#docs">Docs</a></li> */}
       </ul>
 
       {isLoggedIn ? (
