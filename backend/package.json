@@ -22,6 +22,7 @@
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.3",
+    "node-fetch": "^3.3.2",
     "nodemon": "^3.1.14",
     "openai": "^6.45.0"
   }
