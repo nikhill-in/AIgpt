@@ -6,7 +6,7 @@ import Routers from "./src/routes/index.router.js";
 // Fail fast if the token isn't loaded — better to crash on startup
 // than get a silent 401 from Hugging Face three requests in.
 if (!process.env.GEMINI_API_KEY) {
-  throw new Error("HF_TOKEN is missing. Check your .env file.");
+  throw new Error("API Key is missing. Check your .env file.");
 }
 
 const app = express();

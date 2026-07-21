@@ -13,7 +13,7 @@ export async function chatService(input, instructions = "You are a helpful assis
             headers: {
                 Authorization: `Bearer ${GEMINI_KEY}`,
                 "Content-Type": "application/json",
-            },
+            }, 
             body: JSON.stringify({
                 model: "gemini-2.5-flash",
                 messages: [
