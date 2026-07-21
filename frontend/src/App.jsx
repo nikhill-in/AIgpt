@@ -14,17 +14,17 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <div className="zc-app">
-        <div className="zc-glow-bg" />
+      <div className="min-h-screen overflow-x-hidden bg-[#0a0a0c] text-[#f5f5f7]">
         <Navbar onLoginClick={() => setShowLogin(true)} />
+
         <Hero
           onRequireLogin={(prompt) => {
             setPendingPrompt(prompt);
             setShowLogin(true);
           }}
         />
+
         <Features />
-        <Footer />
 
         {showLogin && (
           <LoginModal
@@ -32,6 +32,8 @@ export default function App() {
             onClose={() => setShowLogin(false)}
           />
         )}
+
+        <Footer />
       </div>
     </AuthProvider>
   );

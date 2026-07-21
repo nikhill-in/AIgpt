@@ -11,6 +11,8 @@ if (!process.env.GEMINI_API_KEY) {
 
 const app = express();
 
+app.use(express.urlencoded({ extended: true }));
+
 // Body parser — you were missing this entirely. Without it,
 // req.body is undefined for any POST request with a JSON payload.
 app.use(express.json());
