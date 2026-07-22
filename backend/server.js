@@ -1,7 +1,10 @@
 import express, { Router } from "express";
 import cors from "cors";
-import "dotenv/config";
+import dotenv from "dotenv";
 import Routers from "./src/routes/index.router.js";
+import connectMongo from "./src/config/db.connection.js";
+
+dotenv.config();
 
 // Fail fast if the token isn't loaded — better to crash on startup
 // than get a silent 401 from Hugging Face three requests in.
@@ -29,7 +32,7 @@ app.use(
 // calls the LLM, returns the reply as JSON.
 
 app.use("/api", Routers);
-
+connectMongo();
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Running on ${PORT}`);
