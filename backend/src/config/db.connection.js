@@ -4,10 +4,7 @@ const connectMongo = async () => {
   try {
     console.log("URI: ", process.env.MONGO_URI);
     await mongoose.connect(
-      "mongodb+srv://root:root@cluster0.caubxim.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
-      {
-        dbName: "GptDb",
-      },
+      process.env.MONGO_URI
     );
     console.log("Database connected successfully");
   } catch (error) {
