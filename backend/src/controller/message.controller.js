@@ -1,7 +1,7 @@
-// controllers/messageController.js
-import Chat from "../models/Chat.js";
-import Message from "../models/Message.js";
+
 import { chatService } from "../services/aiService.js";
+import Chat from "../model/chat.model.js";
+import Message from "../model/message.model.js";
 
 export const sendMessage = async (req, res) => {
   const { chatId, content } = req.body;
