@@ -2,12 +2,11 @@ import express, { Router } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import Routers from "./src/routes/index.router.js";
-import connectMongo from "./src/config/db.connection.js";
-import dns from "dns";
+import connectMongo from "./src/config/mongo.config.js";
+
+
 
 dotenv.config();
-
-dns.setServers(['8.8.8.8', '8.8.4.4']); // Force Google DNS
 
 const app = express();
 
@@ -21,10 +20,7 @@ app.use(
   })
 );
 
-
 app.use("/api", Routers);
-
-connectMongo();
 
 const PORT = process.env.PORT;
 
