@@ -4,7 +4,7 @@ export async function chatService(input, instructions, onChunk) {
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GEMINI_KEY}`,
+        Authorization: `Bearer ${process.env.GEMINI_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

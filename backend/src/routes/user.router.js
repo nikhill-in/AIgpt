@@ -6,7 +6,7 @@ const UserRouter = Router();
 
 // UserRouter.post('/')
 // UserRouter.delete('/delete')
-UserRouter.post('/chat',authMiddleware, sendMessage)
+UserRouter.post('/chat', sendMessage)
 // UserRouter.get('/')
 
 export default UserRouter;

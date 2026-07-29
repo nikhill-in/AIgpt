@@ -9,12 +9,18 @@ export const sendMessage = async (req, res) => {
   let chat = chatId ? await Chat.findById(chatId) : null;
   if (!chat) {
     chat = await Chat.create({
-      user: req.user._id,
+      // user: req.user._id,
       title: content.slice(0, 40), // simple auto-title from first message
     });
   }
 
   // save user message immediately
+  if(!content){
+   return res.status(404).json({
+      success: false,
+      message: "Content is required",
+    })
+  }
   await Message.create({ chat: chat._id, role: "user", content });
 
   res.setHeader("Content-Type", "text/event-stream");
