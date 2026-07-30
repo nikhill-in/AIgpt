@@ -4,6 +4,14 @@ import Message from "../model/message.model.js";
 
 export const sendMessage = async (req, res) => {
   const { chatId, content } = req.body;
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "Please login to continue",
+    });
+  }
 
   if (!content) {
     return res.status(400).json({
@@ -12,9 +20,19 @@ export const sendMessage = async (req, res) => {
     });
   }
 
-  let chat = chatId ? await Chat.findById(chatId) : null;
+  let chat = chatId ? await Chat.findOne({ _id: chatId, user: userId }) : null;
+
+  if (chatId && !chat) {
+    // chatId was given but doesn't belong to this user (or doesn't exist)
+    return res.status(404).json({
+      success: false,
+      message: "Chat not found",
+    });
+  }
+
   if (!chat) {
     chat = await Chat.create({
+      user: userId,
       title: content.slice(0, 40),
     });
   }
@@ -24,7 +42,7 @@ export const sendMessage = async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
-  res.write(`data: ${JSON.stringify({ chatId: chat._id })}\n\n`); // send chatId first for new chats
+  res.write(`data: ${JSON.stringify({ chatId: chat._id })}\n\n`);
 
   try {
     const fullText = await chatService(
