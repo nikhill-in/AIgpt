@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import User from "../model/user.model.js";
+import {User} from "../model/user.model.js";
 import { generateAccessToken, generateRefreshToken } from "../helpers/jwt.helper.js";
 
 const COOKIE_OPTS = {
