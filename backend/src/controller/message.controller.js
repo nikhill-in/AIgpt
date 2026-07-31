@@ -4,6 +4,8 @@ import Message from "../model/message.model.js";
 
 export const sendMessage = async (req, res) => {
   const { chatId, content } = req.body;
+  console.log(content)
+  console.log(userId);
   const userId = req.user?.id;
 
   if (!userId) {

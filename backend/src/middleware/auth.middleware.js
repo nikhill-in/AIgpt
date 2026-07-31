@@ -12,6 +12,7 @@ const COOKIE_OPTS = {
 };
 
 const authMiddleware = async (req, res, next) => {
+  console.log("req cookie: ", req.cookies)
   try {
     const accessToken = req.cookies?.accessToken;
     const refreshToken = req.cookies?.refreshToken;

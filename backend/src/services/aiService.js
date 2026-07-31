@@ -16,7 +16,7 @@ export async function chatService(input, instructions, onChunk) {
           { role: "user", content: input },
         ],
         stream: true,
-        max_tokens: 2000,
+        max_tokens: 1000,
         temperature: 0.7,
       }),
     }

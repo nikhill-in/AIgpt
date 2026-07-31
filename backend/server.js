@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import Routers from "./src/routes/index.router.js";
 import connectMongo from "./src/config/mongo.config.js";
+import cookieParser from "cookie-parser";
 
 
 
@@ -11,6 +12,8 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
+
 app.use(express.urlencoded({ extended: true }));
 
 
