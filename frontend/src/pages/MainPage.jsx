@@ -38,7 +38,7 @@ export default function MainPage() {
         },
       );
     } catch (err) {
-        console.log(err)
+      console.log(err);
       setMessages((prev) => [
         ...prev.slice(0, -1),
         { role: "assistant", content: "Something went wrong. Try again." },
@@ -55,12 +55,12 @@ export default function MainPage() {
     : messages;
 
   return (
-    <div className="flex h-screen flex-col bg-[#0a0a0c]">
+    <div className="flex h-screen flex-col bg-[#f7f7f8] dark:bg-[#0a0a0c]">
       <ChatHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
         {visibleMessages.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center text-[#8a8a92]">
+          <div className="flex flex-1 items-center justify-center text-[#6b6b73] dark:text-[#8a8a92]">
             Start a conversation
           </div>
         ) : (
@@ -68,7 +68,11 @@ export default function MainPage() {
             <MessageBubble key={i} role={msg.role} content={msg.content} />
           ))
         )}
-        {isLoading && <div className="text-sm text-[#8a8a92]">Thinking...</div>}
+        {isLoading && (
+          <div className="text-sm text-[#6b6b73] dark:text-[#8a8a92]">
+            Thinking...
+          </div>
+        )}
       </div>
 
       <ChatInput onSend={handleSend} disabled={isLoading} />

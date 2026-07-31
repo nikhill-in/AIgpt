@@ -6,9 +6,15 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(
     () => localStorage.getItem("theme") || "dark"
   );
+  useEffect(() => {
+  console.log("theme effect running:", theme); // TEMP DEBUG
+  localStorage.setItem("theme", theme);
+  document.documentElement.classList.toggle("dark", theme === "dark");
+}, [theme]);
 
   useEffect(() => {
     localStorage.setItem("theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   const toggleTheme = () =>
