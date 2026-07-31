@@ -1,24 +1,35 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-export default function LoginModal({ onClose, pendingPrompt }) {
+export default function LoginModal({ onClose, pendingPrompt, onLoginSuccess }) {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const [error, setError] = useState("");
+const [loading, setLoading] = useState(false);
 
-    if (!email || !password) return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!email || !password) return;
 
-    // TODO: call your backend auth endpoint
-    login(email);
-    onClose();
+  setLoading(true);
+  setError("");
+
+  try {
+    await login(email, password);
+    if (onLoginSuccess) onLoginSuccess();
+    else onClose();
 
     if (pendingPrompt) {
       console.log("Resume prompt after login:", pendingPrompt);
     }
-  };
+  } catch (err) {
+    setError("Incorrect email or password.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div
@@ -107,8 +118,9 @@ export default function LoginModal({ onClose, pendingPrompt }) {
             Sign in to run: “{pendingPrompt}”
           </p>
         )}
-
+        
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
+          
           <input
             type="email"
             placeholder="Email"
@@ -156,9 +168,11 @@ export default function LoginModal({ onClose, pendingPrompt }) {
               focus:ring-[#ff7a18]/20
             "
           />
-
+          {error && (
+  <p className="text-sm text-red-500">{error}</p>
+)}
           <button
-            type="submit"
+            type="submit" disabled={loading}
             className="
               mt-2
               w-full

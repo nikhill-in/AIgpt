@@ -1,7 +1,8 @@
 import { useState } from "react";
-import ChatHeader from "../components/chat/ChatHeader.jsx";
-import MessageBubble from "../components/chat/MessageBubble.jsx";
-import ChatInput from "../components/chat/ChatInput.jsx";
+import ChatHeader from "../components/chats/ChatHeader";
+import MessageBubble from "../components/chats/MessageBubble";
+import ChatInput from "../components/chats/ChatInput";
+
 
 export default function MainPage() {
   const [messages, setMessages] = useState([]);

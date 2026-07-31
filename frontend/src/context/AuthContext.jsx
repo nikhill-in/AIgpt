@@ -1,6 +1,39 @@
-import { loginUser } from "../api/auth.js";
+import { createContext, useContext, useState } from "react";
+import { loginUser, logoutUser } from "../api/auth";
 
-const login = async (email, password) => {
-  const res = await loginUser(email, password);
-  setUser(res.data.user);
-};
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState(null);
+
+  const login = async (email, password) => {
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      const res = await loginUser(email, password);
+      setUser(res.data.user); // backend returns { user: {...} }, no token
+    } catch (err) {
+      setAuthError(err.response?.data?.message || "Login failed");
+      throw err; // re-throw so the component calling login() knows it failed
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    await logoutUser();
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{ user, isLoggedIn: !!user, login, logout, authLoading, authError }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export const useAuth = () => useContext(AuthContext);

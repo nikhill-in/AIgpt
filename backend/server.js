@@ -19,10 +19,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:5173",
+    credentials: true, // ADD THIS — required for cookies to work
   })
 );
-
 app.use("/api", Routers);
 
 const PORT = process.env.PORT;
