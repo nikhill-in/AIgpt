@@ -40,9 +40,15 @@ export default function ChatHeader({ searchQuery, onSearchChange }) {
 
           {showProfileMenu && (
             <div className="absolute right-0 top-11 w-48 rounded-xl border border-[#26262c] bg-[#141418] p-2 shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
-              <p className="truncate px-3 py-2 text-sm text-[#8a8a92]">
+              <p className="truncate px-3 py-2 text-sm text-[#8a8a92af]">
                 {user?.email}
               </p>
+              <button
+                onClick={logout}
+                className="w-full rounded-lg px-3 py-2 text-left hover:font-bold transition-all duration-200 text-sm text-[#f5f5f77e] transition hover:bg-[#22222a]"
+              >
+                History
+              </button>
               <button
                 onClick={logout}
                 className="w-full rounded-lg px-3 py-2 text-left text-sm text-[#f5f5f7] transition hover:bg-[#22222a]"

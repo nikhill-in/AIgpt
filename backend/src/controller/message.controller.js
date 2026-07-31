@@ -5,8 +5,8 @@ import Message from "../model/message.model.js";
 export const sendMessage = async (req, res) => {
   const { chatId, content } = req.body;
   console.log(content)
-  console.log(userId);
   const userId = req.user?.id;
+  console.log(userId);
 
   if (!userId) {
     return res.status(401).json({
@@ -25,7 +25,6 @@ export const sendMessage = async (req, res) => {
   let chat = chatId ? await Chat.findOne({ _id: chatId, user: userId }) : null;
 
   if (chatId && !chat) {
-    // chatId was given but doesn't belong to this user (or doesn't exist)
     return res.status(404).json({
       success: false,
       message: "Chat not found",

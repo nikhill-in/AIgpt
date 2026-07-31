@@ -2,25 +2,45 @@ import { useState } from "react";
 import ChatHeader from "../components/chats/ChatHeader";
 import MessageBubble from "../components/chats/MessageBubble";
 import ChatInput from "../components/chats/ChatInput";
-
+import { sendMessageStream } from "../api/chat";
 
 export default function MainPage() {
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState(null);
 
   const handleSend = async (text) => {
     const userMessage = { role: "user", content: text };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
+    let assistantText = "";
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
     try {
-      // TODO: replace with real API call, e.g.
-      // const res = await sendChatMessage(text);
-      // setMessages((prev) => [...prev, { role: "assistant", content: res.data.reply }]);
+      await sendMessageStream(
+        currentChatId,
+        text,
+        (token) => {
+          assistantText += token;
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              role: "assistant",
+              content: assistantText,
+            };
+            return updated;
+          });
+        },
+        (newChatId) => {
+          if (!currentChatId) setCurrentChatId(newChatId);
+        },
+      );
     } catch (err) {
+        console.log(err)
       setMessages((prev) => [
-        ...prev,
+        ...prev.slice(0, -1),
         { role: "assistant", content: "Something went wrong. Try again." },
       ]);
     } finally {
@@ -30,7 +50,7 @@ export default function MainPage() {
 
   const visibleMessages = searchQuery
     ? messages.filter((m) =>
-        m.content.toLowerCase().includes(searchQuery.toLowerCase())
+        m.content.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : messages;
 
@@ -48,9 +68,7 @@ export default function MainPage() {
             <MessageBubble key={i} role={msg.role} content={msg.content} />
           ))
         )}
-        {isLoading && (
-          <div className="text-sm text-[#8a8a92]">Thinking...</div>
-        )}
+        {isLoading && <div className="text-sm text-[#8a8a92]">Thinking...</div>}
       </div>
 
       <ChatInput onSend={handleSend} disabled={isLoading} />
