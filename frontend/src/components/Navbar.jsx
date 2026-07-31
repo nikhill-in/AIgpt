@@ -1,6 +1,6 @@
 import { useAuth } from "../context/AuthContext";
 
-export default function Navbar({ onLoginClick }) {
+export default function Navbar({ onLoginClick, onSidebarToggle }) {
   const { isLoggedIn, user, logout } = useAuth();
 
   return (
@@ -19,21 +19,45 @@ export default function Navbar({ onLoginClick }) {
         max-[640px]:px-5
       "
     >
-      {/* Logo */}
-      <div className="flex items-center gap-[10px] text-[1.4rem] font-bold text-[#f5f5f7]">
-        <span>
-          Zoom<span className="text-[#ff7a18]">Con</span>
-        </span>
+      {/* Left side: sidebar toggle + logo */}
+      <div className="flex items-center gap-3">
+        {isLoggedIn && (
+          <button
+            onClick={onSidebarToggle}
+            aria-label="Toggle history sidebar"
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-lg
+              text-[#8a8a92]
+              transition
+              duration-200
+              hover:bg-[#22222a]
+              hover:text-[#f5f5f7]
+            "
+          >
+            ☰
+          </button>
+        )}
 
-        <span
-          className="
-            h-[18px]
-            w-[18px]
-            rounded-full
-            bg-[radial-gradient(circle_at_30%_30%,#ffd9a0,var(--zc-orange-deep))]
-            shadow-[0_0_14px_var(--zc-orange)]
-          "
-        />
+        <div className="flex items-center gap-[10px] text-[1.4rem] font-bold text-[#f5f5f7]">
+          <span>
+            Zoom<span className="text-[#ff7a18]">Con</span>
+          </span>
+
+          <span
+            className="
+              h-[18px]
+              w-[18px]
+              rounded-full
+              bg-[radial-gradient(circle_at_30%_30%,#ffd9a0,var(--zc-orange-deep))]
+              shadow-[0_0_14px_var(--zc-orange)]
+            "
+          />
+        </div>
       </div>
 
       {/* Navigation Links */}
@@ -48,8 +72,8 @@ export default function Navbar({ onLoginClick }) {
           max-[640px]:justify-center
         "
       >
-        <li>
-          <a
+        <li><a
+          
             href="#features"
             className="
               text-[#8a8a92]
@@ -62,16 +86,6 @@ export default function Navbar({ onLoginClick }) {
             Features
           </a>
         </li>
-
-        {/* 
-        <li>
-          <a href="#pricing">Pricing</a>
-        </li>
-
-        <li>
-          <a href="#docs">Docs</a>
-        </li>
-        */}
       </ul>
 
       {/* Authentication */}

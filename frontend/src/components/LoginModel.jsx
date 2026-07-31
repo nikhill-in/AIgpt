@@ -108,10 +108,7 @@ export default function LoginModal({ onClose, pendingPrompt }) {
           </p>
         )}
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-6 flex flex-col gap-3"
-        >
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
           <input
             type="email"
             placeholder="Email"
