@@ -38,7 +38,7 @@ if (tSize === 2000 && !ALLOWED_ROLES.includes(req.user.role)) {
   if (!chat) {
     chat = await Chat.create({
       user: userId,
-      title: content.slice(0, 40),
+      title: content,
     });
   }
 
