@@ -1,6 +1,6 @@
 
 
-export async function chatService(input, instructions, onChunk) {
+export async function chatService(input, instructions, onChunk, tSize) {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`,
     {
@@ -16,7 +16,7 @@ export async function chatService(input, instructions, onChunk) {
           { role: "user", content: input },
         ],
         stream: true,
-        max_tokens: 1000,
+        max_tokens: tSize,
         temperature: 0.7,
       }),
     }

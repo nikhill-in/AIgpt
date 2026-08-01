@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import {  MoonIcon, SunDimIcon } from "lucide-react";
 
 export default function ChatHeader({ searchQuery, onSearchChange }) {
   const { user, logout } = useAuth();
@@ -34,7 +35,7 @@ export default function ChatHeader({ searchQuery, onSearchChange }) {
             hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]
           "
         >
-          {isDark ? "☀️" : "🌙"}
+          {isDark ? <SunDimIcon/> : <MoonIcon/>}
         </button>
 
         <div className="relative">

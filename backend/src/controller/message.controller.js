@@ -3,11 +3,15 @@ import Chat from "../model/chat.model.js";
 import Message from "../model/message.model.js";
 
 export const sendMessage = async (req, res) => {
-  const { chatId, content } = req.body;
+  const { chatId, content, tSize } = req.body;
   console.log(content)
   const userId = req.user?.id;
   console.log(userId);
+const ALLOWED_ROLES = ["admin", "pro"];
 
+if (tSize === 2000 && !ALLOWED_ROLES.includes(req.user.role)) {
+  return res.status(403).json({ success: false, message: "Not authorized for this token size" });
+}
   if (!userId) {
     return res.status(401).json({
       success: false,
@@ -52,6 +56,7 @@ export const sendMessage = async (req, res) => {
       (token) => {
         res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
       },
+      tSize
     );
 
     if (!fullText) {
