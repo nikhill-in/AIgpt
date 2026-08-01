@@ -2,15 +2,31 @@ import { useState } from "react";
 import ChatHeader from "../components/chats/ChatHeader";
 import MessageBubble from "../components/chats/MessageBubble";
 import ChatInput from "../components/chats/ChatInput";
-import { sendMessageStream } from "../api/chat";
+import { getChatMessages, sendMessageStream } from "../api/chat";
+import Sidebar from "../components/Sidebar";
 
 export default function MainPage() {
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleSend = async (text) => {
+  const handleSelectChat = async (chatId) => {
+    setSidebarOpen(false);
+    setCurrentChatId(chatId);
+    setIsLoading(true);
+    try {
+      const msgs = await getChatMessages(chatId);
+      setMessages(msgs);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSend = async (text, tSize) => {
     const userMessage = { role: "user", content: text };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
@@ -36,6 +52,7 @@ export default function MainPage() {
         (newChatId) => {
           if (!currentChatId) setCurrentChatId(newChatId);
         },
+        tSize,
       );
     } catch (err) {
       console.log(err);
@@ -56,7 +73,16 @@ export default function MainPage() {
 
   return (
     <div className="flex h-screen flex-col bg-[#f7f7f8] dark:bg-[#0a0a0c]">
-      <ChatHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onSelectChat={handleSelectChat}
+      />
+      <ChatHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onHistoryClick={() => setSidebarOpen(true)}
+      />
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
         {visibleMessages.length === 0 ? (

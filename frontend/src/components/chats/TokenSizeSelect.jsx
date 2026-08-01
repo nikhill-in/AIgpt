@@ -4,7 +4,7 @@ import { Lock } from "lucide-react";
 
 const OPTIONS = [
   { value: 700, label: "700 · Short", restricted: false },
-  { value: 1200, label: "1200 · Standard", restricted: false },
+  { value: 2200, label: "2200 · Standard", restricted: false },
   { value: 2000, label: "2000 · Extended", restricted: true },
 ];
 

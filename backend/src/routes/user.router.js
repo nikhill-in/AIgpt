@@ -7,8 +7,8 @@ const UserRouter = Router();
 
 // UserRouter.post('/')
 // UserRouter.delete('/delete')
-UserRouter.post('/chat', sendMessage)
-UserRouter.get('/', getChatMessages)
-UserRouter.get('/', getChats)
+UserRouter.post('/send', sendMessage)
+UserRouter.get('/message/:chatId', getChatMessages)
+UserRouter.get('/chats', getChats)
 
 export default UserRouter;

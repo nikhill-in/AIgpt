@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import {  MoonIcon, SunDimIcon } from "lucide-react";
+import { MoonIcon, SunDimIcon } from "lucide-react";
 
-export default function ChatHeader({ searchQuery, onSearchChange }) {
+export default function ChatHeader({
+  searchQuery,
+  onSearchChange,
+  onHistoryClick,
+}) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -35,7 +39,7 @@ export default function ChatHeader({ searchQuery, onSearchChange }) {
             hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]
           "
         >
-          {isDark ? <SunDimIcon/> : <MoonIcon/>}
+          {isDark ? <SunDimIcon /> : <MoonIcon />}
         </button>
 
         <div className="relative">
@@ -52,7 +56,7 @@ export default function ChatHeader({ searchQuery, onSearchChange }) {
                 {user?.email}
               </p>
               <button
-                onClick={logout}
+                onClick={onHistoryClick}
                 className="
                   w-full rounded-lg px-3 py-2 text-left hover:font-bold
                   transition-all duration-200 text-sm

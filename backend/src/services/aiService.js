@@ -40,7 +40,7 @@ export async function chatService(input, instructions, onChunk, tSize) {
     if (done) break;
 
     const rawChunk = decoder.decode(value, { stream: true });
-    console.log("RAW CHUNK:", JSON.stringify(rawChunk));
+    // console.log("RAW CHUNK:", JSON.stringify(rawChunk));
 
     buffer += rawChunk;
     const lines = buffer.split("\n");
@@ -55,7 +55,7 @@ export async function chatService(input, instructions, onChunk, tSize) {
 
       try {
         const json = JSON.parse(payload);
-        console.log("PARSED JSON:", JSON.stringify(json));
+        // console.log("PARSED JSON:", JSON.stringify(json));
 
         const token = json.choices?.[0]?.delta?.content || "";
         if (token) {
@@ -68,6 +68,6 @@ export async function chatService(input, instructions, onChunk, tSize) {
     }
   }
 
-  console.log("FINAL fullText:", JSON.stringify(fullText));
+  // console.log("FINAL fullText:", JSON.stringify(fullText));
   return fullText;
 }

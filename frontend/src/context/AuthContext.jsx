@@ -13,10 +13,10 @@ export function AuthProvider({ children }) {
     setAuthError(null);
     try {
       const res = await loginUser(email, password);
-      setUser(res.data.user); // backend returns { user: {...} }, no token
+      setUser(res.data.user); 
     } catch (err) {
       setAuthError(err.response?.data?.message || "Login failed");
-      throw err; // re-throw so the component calling login() knows it failed
+      throw err; 
     } finally {
       setAuthLoading(false);
     }

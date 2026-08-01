@@ -7,6 +7,12 @@ export const getChats = async (req, res) => {
 };
 
 export const getChatMessages = async (req, res) => {
-  const messages = await Message.find({ chat: req.params.chatId }).sort({ createdAt: 1 });
+  const chat = await Chat.findOne({ _id: req.params.chatId, user: req.user._id });
+
+  if (!chat) {
+    return res.status(404).json({ success: false, message: "Chat not found" });
+  }
+
+  const messages = await Message.find({ chat: chat._id }).sort({ createdAt: 1 });
   res.json(messages);
 };
