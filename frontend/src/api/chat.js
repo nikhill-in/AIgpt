@@ -1,4 +1,12 @@
-export async function sendMessageStream(chatId, content, onToken, onChatId, tSize) {
+import api from "./axios";
+
+export async function sendMessageStream(
+  chatId,
+  content,
+  onToken,
+  onChatId,
+  tSize,
+) {
   const response = await fetch(`${import.meta.env.VITE_API_URL}/user/send`, {
     method: "POST",
     credentials: "include", // sends the auth cookie, same as your axios instance
@@ -39,14 +47,14 @@ export async function sendMessageStream(chatId, content, onToken, onChatId, tSiz
 
         if (json.text) {
           fullText += json.text;
-          onToken?.(json.text);
+          await onToken?.(json.text);
         }
 
         if (json.error) {
           throw new Error(json.error);
         }
       } catch (e) {
-        console.error("Bad SSE payload from server:",e, payload);
+        console.error("Bad SSE payload from server:", e, payload);
       }
     }
   }
@@ -55,17 +63,16 @@ export async function sendMessageStream(chatId, content, onToken, onChatId, tSiz
 }
 
 export async function getChats() {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/user/chats`, {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("Failed to load chats");
-  return res.json();
+  const res = await api.get(`/user/chats`);
+  return res.data;
 }
 
 export async function getChatMessages(chatId) {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/user/message/${chatId}`, {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("Failed to load messages");
-  return res.json();
+  const res = await api.get(`/user/message/${chatId}`);
+  return res.data;
+}
+
+export async function deleteChatMessages(chatId) {
+  const res = await api.delete(`/user/message/${chatId}`);
+  return res.data;
 }
