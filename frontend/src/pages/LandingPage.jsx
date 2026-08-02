@@ -5,13 +5,16 @@ import LoginModal from "../components/LoginModel.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import logoDark from "../assets/logoDark.png";
 import logoLight from "../assets/logoLight.png";
+import { MoonIcon, SunDimIcon } from "lucide-react";
 
 export default function LandingPage() {
   const [showLogin, setShowLogin] = useState(false);
   const { isLoggedIn } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+
   const navigate = useNavigate();
 
-  const { isDark } = useTheme();
+  // const { isDark } = useTheme();
 
   const handleStart = () => {
     if (isLoggedIn) {
@@ -26,20 +29,37 @@ export default function LandingPage() {
       {/* Top bar */}
       <header className="flex items-center justify-between px-[6vw] ">
         <div className="flex items-center">
-          <img src={isDark ? logoDark : logoLight} alt="ZoomCon" className="h-26 w-auto" />
+          <img
+            src={isDark ? logoDark : logoLight}
+            alt="ZoomCon"
+            className="h-26 w-auto"
+          />
         </div>
-
-        <button
-          onClick={() => setShowLogin(true)}
-          className="
+        <div className="flex gap-2 justify-between">
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="
+            flex h-9 w-9 items-center justify-center rounded-lg
+            text-[#6b6b73] dark:text-[#8a8a92] transition
+            hover:bg-[#eaeaec] dark:hover:bg-[#22222a]
+            hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]
+          "
+          >
+            {isDark ? <SunDimIcon /> : <MoonIcon />}
+          </button>
+          <button
+            onClick={() => setShowLogin(true)}
+            className="
             rounded-[10px] border border-[#d4d4d8] dark:border-[#33333a] bg-transparent
             px-5 py-2 text-sm font-medium text-[#1a1a1e] dark:text-[#f5f5f7]
             transition duration-200
             hover:border-[#ff7a18] hover:text-[#ff7a18]
           "
-        >
-          Log in
-        </button>
+          >
+            Log in
+          </button>
+        </div>
       </header>
 
       {/* Hero */}
@@ -76,7 +96,7 @@ export default function LandingPage() {
           className="
             mt-10 rounded-[10px] bg-gradient-to-br from-[#ff7a18] to-[#ff4d00]
             px-8 py-3 text-base font-semibold text-white
-            transition duration-200
+            transition-all duration-200
             hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(255,77,0,0.4)]
           "
         >

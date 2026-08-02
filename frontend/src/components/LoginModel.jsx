@@ -1,35 +1,39 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import logoDark from "../assets/logoDark.png";
+import logoLight from "../assets/logoLight.png";
 
 export default function LoginModal({ onClose, pendingPrompt, onLoginSuccess }) {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
-const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!email || !password) return;
+  const { isDark } = useTheme();
 
-  setLoading(true);
-  setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !password) return;
 
-  try {
-    await login(email, password);
-    if (onLoginSuccess) onLoginSuccess();
-    else onClose();
+    setLoading(true);
+    setError("");
 
-    if (pendingPrompt) {
-      console.log("Resume prompt after login:", pendingPrompt);
+    try {
+      await login(email, password);
+      if (onLoginSuccess) onLoginSuccess();
+      else onClose();
+
+      if (pendingPrompt) {
+        console.log("Resume prompt after login:", pendingPrompt);
+      }
+    } catch (err) {
+      setError("Incorrect email or password.");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    setError("Incorrect email or password.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div
@@ -55,7 +59,7 @@ const handleSubmit = async (e) => {
           rounded-2xl
           border
           border-[#26262c]
-          bg-[#141418]
+          bg-white dark:bg-[#141418]
           p-7
           shadow-[0_20px_80px_rgba(0,0,0,0.6)]
 
@@ -88,20 +92,15 @@ const handleSubmit = async (e) => {
           ✕
         </button>
 
-        <div
-          className="
-            mx-auto
-            mb-3
-            h-16
-            w-16
-            rounded-full
-            bg-[radial-gradient(circle_at_35%_30%,#ffe0b0,var(--zc-orange)_45%,var(--zc-orange-deep)_100%)]
-            shadow-[0_0_40px_rgba(255,122,24,0.6)]
-            animate-[zc-pulse_3.5s_ease-in-out_infinite]
-          "
-        />
+        <div className="flex items-center justify-center">
+          <img
+            src={isDark ? logoDark : logoLight}
+            alt="ZoomCon"
+            className="h-26 w-auto"
+          />
+        </div>
 
-        <h2 className="text-center text-2xl font-bold text-[#f5f5f7]">
+        <h2 className="text-center text-2xl font-bold text-[#1a1a1e] dark:text-[#f5f5f7]">
           Welcome to ZoomCon
         </h2>
 
@@ -118,9 +117,8 @@ const handleSubmit = async (e) => {
             Sign in to run: “{pendingPrompt}”
           </p>
         )}
-        
+
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
-          
           <input
             type="email"
             placeholder="Email"
@@ -168,11 +166,10 @@ const handleSubmit = async (e) => {
               focus:ring-[#ff7a18]/20
             "
           />
-          {error && (
-  <p className="text-sm text-red-500">{error}</p>
-)}
+          {error && <p className="text-sm text-red-500">{error}</p>}
           <button
-            type="submit" disabled={loading}
+            type="submit"
+            disabled={loading}
             className="
               mt-2
               w-full

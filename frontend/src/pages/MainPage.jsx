@@ -81,7 +81,7 @@ export default function MainPage() {
       <ChatHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onHistoryClick={() => setSidebarOpen(true)}
+        onHistoryClick={() => setSidebarOpen(sidebarOpen ? false : true)}
       />
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
