@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import Routers from "./src/routes/index.router.js";
 import connectMongo from "./src/config/mongo.config.js";
 import cookieParser from "cookie-parser";
+import errorHandler from "./src/middleware/errorHandler.middleware.js";
 
 
 
@@ -24,6 +25,7 @@ app.use(
   })
 );
 app.use("/api", Routers);
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 
