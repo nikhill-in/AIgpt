@@ -6,7 +6,7 @@
     const Routers = Router();
 
     Routers.use('/user',authMiddleware, UserRouter)
-    Routers.use('/auth',authMiddleware, AuthRouter)
+    Routers.use('/auth', AuthRouter)
 
 
     export default Routers;
