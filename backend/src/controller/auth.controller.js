@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import {User} from "../model/user.model.js";
 import { generateAccessToken, generateRefreshToken } from "../helpers/jwt.helper.js";
+import catchAsync from "../utils/catchAsync.js";
+import ApiError from "../utils/apiError.js";
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -97,15 +99,13 @@ export const logout = async (req, res) => {
   }
 };
 
-export const getMe = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(404).json({ status: false, message: "User not found" });
-    }
-    return res.status(200).json({ status: true, user });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ status: false, message: "Something went wrong. Please try again later" });
+export const getMe = catchAsync(async (req, res) => {
+  console.log("this is req. user", req.user);
+  const user = await User.findById(req.user.id).select("-password");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
   }
-};
+
+  res.json({ user });
+});

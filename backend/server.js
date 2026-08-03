@@ -27,6 +27,19 @@ app.use(
 app.use("/api", Routers);
 app.use(errorHandler);
 
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION! Shutting down...");
+  console.error(err.name, err.message);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION! Shutting down...");
+  console.error(err.name, err.message);
+  server.close(() => process.exit(1));
+});
+
+
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {

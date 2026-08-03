@@ -1,24 +1,28 @@
-import { createContext, useContext, useState } from "react";
-import { loginUser, logoutUser } from "../api/auth";
+import { createContext, useContext, useState, useEffect } from "react";
+import { loginUser, logoutUser, getCurrentUser } from "../api/auth";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true); // true until initial check completes
   const [authError, setAuthError] = useState(null);
 
+  useEffect(() => {
+    getCurrentUser()
+      .then((res) => setUser(res.data.user))
+      .catch(() => setUser(null)) // no valid cookie — stay logged out, not an error to show
+      .finally(() => setAuthLoading(false));
+  }, []);
+
   const login = async (email, password) => {
-    setAuthLoading(true);
     setAuthError(null);
     try {
       const res = await loginUser(email, password);
-      setUser(res.data.user); 
+      setUser(res.data.user);
     } catch (err) {
       setAuthError(err.response?.data?.message || "Login failed");
-      throw err; 
-    } finally {
-      setAuthLoading(false);
+      throw err;
     }
   };
 
