@@ -25,7 +25,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f7f8] dark:bg-[#0a0a0c] text-[#1a1a1e] dark:text-[#f5f5f7]">
+    <div className="flex min-h-screen flex-col bg-[#9c9c9c] dark:bg-[#0a0a0c] text-[#1a1a1e] dark:text-[#f5f5f7]">
       {/* Top bar */}
       <header className="flex items-center justify-between px-[6vw] ">
         <div className="flex items-center">
@@ -41,7 +41,7 @@ export default function LandingPage() {
             aria-label="Toggle theme"
             className="
             flex h-9 w-9 items-center justify-center rounded-lg
-            text-[#6b6b73] dark:text-[#8a8a92] transition
+            text-black dark:text-[#8a8a92] transition
             hover:bg-[#eaeaec] dark:hover:bg-[#22222a]
             hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]
           "
@@ -64,7 +64,7 @@ export default function LandingPage() {
 
       {/* Hero */}
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-        <p className="mb-4 font-mono text-xs uppercase tracking-[0.3em] text-[#6b6b73] dark:text-[#8a8a92]">
+        <p className="mb-4 font-mono text-xs uppercase tracking-[0.3em] text-black dark:text-[#8a8a92]">
           ask → answer
         </p>
 
@@ -72,7 +72,7 @@ export default function LandingPage() {
           A chatbot that just answers.
         </h1>
 
-        <p className="mt-5 max-w-md text-base leading-7 text-[#6b6b73] dark:text-[#8a8a92]">
+        <p className="mt-5 max-w-md text-base leading-7 text-black dark:text-[#8a8a92]">
           Type a question. Get a generated answer. Nothing else in the way.
         </p>
 
@@ -85,7 +85,7 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-3 flex justify-start">
-            <div className="max-w-[80%] rounded-2xl rounded-tl-sm border border-[#e5e5e8] dark:border-[#26262c] bg-[#f7f7f8] dark:bg-[#0a0a0c] px-4 py-2 text-sm text-[#1a1a1e] dark:text-[#f5f5f7]">
+            <div className="max-w-[80%] rounded-2xl rounded-tl-sm border border-[#e5e5e8] dark:border-[#26262c] bg-[#9c9c9c] dark:bg-[#0a0a0c] px-4 py-2 text-sm text-[#1a1a1e] dark:text-[#f5f5f7]">
               Tokyo.
             </div>
           </div>

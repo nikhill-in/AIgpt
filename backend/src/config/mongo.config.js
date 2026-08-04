@@ -4,7 +4,7 @@ import dns from "dns";
 
 
 
-dns.setServers(['8.8.8.8', '8.8.4.4']); // Force Google DNS
+dns.setServers(['8.8.8.8', '8.8.4.4']); 
 
 const connectMongo = async () => {
   try {

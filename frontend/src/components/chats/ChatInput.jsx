@@ -20,7 +20,7 @@ export default function ChatInput({ onSend, disabled }) {
   };
 
   return (
-    <div className="flex flex-col gap-2 border-t border-[#e5e5e8] dark:border-[#26262c] bg-[#f7f7f8] dark:bg-[#0a0a0c] p-4">
+    <div className="flex flex-col gap-2 border-t border-[#e5e5e8] dark:border-[#26262c] bg-[#9c9c9c] dark:bg-[#0a0a0c] p-4">
       <div className="flex items-end gap-2">
         <textarea
           value={value}
@@ -32,7 +32,7 @@ export default function ChatInput({ onSend, disabled }) {
             max-h-40 flex-1 resize-none rounded-xl border border-[#e5e5e8] dark:border-[#2a2a30]
             bg-white dark:bg-[#141418] px-4 py-3
             text-[#1a1a1e] dark:text-[#f5f5f7] outline-none
-            placeholder:text-[#6b6b73] dark:placeholder:text-[#8a8a92]
+            placeholder:text-black dark:placeholder:text-[#8a8a92]
             focus:border-[#ff7a18]
             focus:ring-2 focus:ring-[#ff7a18]/20
           "

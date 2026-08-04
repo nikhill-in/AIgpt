@@ -11,8 +11,8 @@ import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 
   if (authLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#f7f7f8] dark:bg-[#0a0a0c]">
-        <p className="text-[#6b6b73] dark:text-[#8a8a92]">Loading...</p>
+      <div className="flex h-screen items-center justify-center bg-[#9c9c9c] dark:bg-[#0a0a0c]">
+        <p className="text-black dark:text-[#8a8a92]">Loading...</p>
       </div>
     );
   }
