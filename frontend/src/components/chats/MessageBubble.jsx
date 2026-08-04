@@ -65,6 +65,7 @@ export default function MessageBubble({ role, content, createdAt, onEdit }) {
 
   return (
     <div className={`flex w-full flex-col ${isUser ? "items-end" : "items-start"}`}>
+      
       <div
         className={`
           max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-6
