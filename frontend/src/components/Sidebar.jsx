@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { PlusIcon, HistoryIcon, LogOutIcon, TrashIcon, Cross, Crosshair, CrosshairIcon, CrossIcon } from "lucide-react";
+import {
+  PlusIcon,
+  HistoryIcon,
+  LogOutIcon,
+  TrashIcon,
+  Cross,
+  Crosshair,
+  CrosshairIcon,
+  CrossIcon,
+  Edit,
+} from "lucide-react";
 import { deleteChatMessages, getChats } from "../api/chat";
 import { useAuth } from "../context/AuthContext";
 
@@ -39,19 +49,15 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
       {/* Top icons — always visible, regardless of expanded state */}
       <div className="flex flex-col gap-1 p-2">
         <button
-  onClick={onNewChat}
-  aria-label="New chat"
-  title="New chat"
-  className="flex h-10 items-center gap-2 rounded-lg px-3 text-[#6b6b73] transition hover:bg-[#eaeaec] hover:text-[#1a1a1e] dark:text-[#8a8a92] dark:hover:bg-[#22222a] dark:hover:text-[#f5f5f7]"
->
-  <PlusIcon size={18} className="shrink-0" />
+          onClick={onNewChat}
+          aria-label="New chat"
+          title="New chat"
+          className="flex h-10 items-center gap-2 rounded-lg px-3 text-[#6b6b73] transition hover:bg-[#eaeaec] hover:text-[#1a1a1e] dark:text-[#8a8a92] dark:hover:bg-[#22222a] dark:hover:text-[#f5f5f7]"
+        >
+          <PlusIcon size={18} className="shrink-0" />
 
-  {isOpen && (
-    <span className="whitespace-nowrap ">
-      New Chat
-    </span>
-  )}
-</button>
+          {isOpen && <span className="whitespace-nowrap ">New Chat</span>}
+        </button>
 
         <button
           onClick={onToggle}
@@ -61,11 +67,11 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
         >
           <HistoryIcon
             size={18}
-            className={isOpen==true ? "hidden" : "block"}
+            className={isOpen == true ? "hidden" : "block"}
           />
           <CrossIcon
             size={18}
-            className={isOpen==false ? "hidden " : "block  rotate-45"}
+            className={isOpen == false ? "hidden " : "block  rotate-45"}
           />{" "}
         </button>
       </div>
@@ -95,8 +101,15 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
                 </button>
                 <button
                   onClick={(e) => handleDelete(e, chat._id)}
+                  aria-label="Rename"
+                  className="mr-0.5 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:bg-green-500/10 dark:text-[#8a8a92]"
+                >
+                  <Edit size={14} />
+                </button>
+                <button
+                  onClick={(e) => handleDelete(e, chat._id)}
                   aria-label="Delete chat"
-                  className="mr-2 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:text-red-500 dark:text-[#8a8a92]"
+                  className="mr-2 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 dark:text-[#8a8a92]"
                 >
                   <TrashIcon size={14} />
                 </button>
