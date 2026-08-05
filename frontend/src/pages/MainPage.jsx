@@ -85,6 +85,10 @@ export default function MainPage() {
       isSendingRef.current = false;
     }
   };
+  
+  const handleRemove = ()=>{
+    setMessages(0);
+  }
 
   const handleEdit = async (messageId, newContent) => {
     const editIndex = messages.findIndex((m) => m._id === messageId);
@@ -131,11 +135,7 @@ export default function MainPage() {
 
   return (
     <div className="flex h-screen flex-col bg-[#f7f7f8] dark:bg-[#0a0a0c]">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onSelectChat={handleSelectChat}
-      />
+      
       <ChatHeader
         onHistoryClick={() => {
           if (isSendingRef.current) return;
@@ -144,12 +144,18 @@ export default function MainPage() {
       />
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
+        <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onSelectChat={handleSelectChat}
+        onDeleteChat={handleRemove}
+      />
         {messages.length === 0 ? (
           <div className="flex flex-1 items-center justify-center text-[#6b6b73] dark:text-[#8a8a92]">
             Start a conversation
           </div>
         ) : (
-          messages.map((msg, i) => (
+          messages?.map((msg, i) => (
             <MessageBubble
               key={msg._id || i}
               role={msg.role}

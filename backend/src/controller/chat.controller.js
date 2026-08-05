@@ -25,6 +25,8 @@ export const getChatMessages = catchAsync(async (req, res) => {
 
 // delete chat====================
 export const deleteChat = catchAsync(async (req, res) => {
+
+  console.log("on delete ",req.params.chatId )
   const chat = await Chat.findOne({ _id: req.params.chatId, user: req.user.id }); // missing user filter — IDOR again
 
   if (!chat) {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { getChats } from "../api/chat";
+import { deleteChatMessages, getChats } from "../api/chat";
+import { Delete, DeleteIcon, LucideDelete, PaintBucketIcon, Trash } from "lucide-react";
 
-export default function Sidebar({ isOpen, onClose, onSelectChat }) {
+export default function Sidebar({ isOpen, onClose, onSelectChat, onDeleteChat }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -13,6 +14,17 @@ export default function Sidebar({ isOpen, onClose, onSelectChat }) {
       .catch(() => setHistory([]))
       .finally(() => setLoading(false));
   }, [isOpen]);
+
+  const handleDelete = async (chatId) => {
+  try {
+    await deleteChatMessages(chatId);
+    onDeleteChat(0)
+
+    setHistory((prev) => prev.filter((chat) => chat._id !== chatId));
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   return (
     <>
@@ -46,13 +58,16 @@ export default function Sidebar({ isOpen, onClose, onSelectChat }) {
             <p className="px-2 py-4 text-center text-sm text-black dark:text-[#8a8a92]">No past chats yet</p>
           ) : (
             history.map((chat) => (
-              <button
-                key={chat._id}
+             <div key={chat._id} className="flex justify-between">
+               <button
                 onClick={() => onSelectChat(chat._id)}
                 className="truncate rounded-lg px-3 py-2 text-left text-sm text-[#1a1a1e] dark:text-[#d4d4d8] transition duration-150 hover:bg-[#eaeaec] dark:hover:bg-[#22222a]"
               >
                 {chat.title}
               </button>
+              <button className="hover:text-red-500 duration-200" onClick={() =>handleDelete(chat._id)}><Trash/></button>
+             </div>
+              
             ))
           )}
         </div>
