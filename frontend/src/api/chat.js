@@ -80,6 +80,11 @@ export async function deleteChatMessages(chatId) {
   return res.data;
 }
 
+export async function renameChat(chatId, title) {
+  const res = await api.patch(`/user/rename/${chatId}`, { title });
+  return res.data;
+}
+
 
 //edit message===========
 
