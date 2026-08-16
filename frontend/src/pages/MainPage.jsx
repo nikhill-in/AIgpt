@@ -2,7 +2,11 @@ import { useState, useRef } from "react";
 import ChatHeader from "../components/chats/ChatHeader";
 import MessageBubble from "../components/chats/MessageBubble";
 import ChatInput from "../components/chats/ChatInput";
-import { getChatMessages, sendMessageStream, editMessageStream } from "../api/chat";
+import {
+  getChatMessages,
+  sendMessageStream,
+  editMessageStream,
+} from "../api/chat";
 import Sidebar from "../components/Sidebar";
 
 function revealGradually(chunk, onChar, speedMs = 15) {
@@ -49,7 +53,11 @@ export default function MainPage() {
   };
 
   const handleSend = async (text, size) => {
-    const userMessage = { role: "user", content: text, createdAt: new Date().toISOString() };
+    const userMessage = {
+      role: "user",
+      content: text,
+      createdAt: new Date().toISOString(),
+    };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
     isSendingRef.current = true;
@@ -69,7 +77,10 @@ export default function MainPage() {
             assistantText += char;
             setMessages((prev) => {
               const updated = [...prev];
-              updated[updated.length - 1] = { ...updated[updated.length - 1], content: assistantText };
+              updated[updated.length - 1] = {
+                ...updated[updated.length - 1],
+                content: assistantText,
+              };
               return updated;
             });
           });
@@ -97,7 +108,11 @@ export default function MainPage() {
 
     setMessages((prev) => [
       ...prev.slice(0, editIndex),
-      { role: "user", content: newContent, createdAt: new Date().toISOString() },
+      {
+        role: "user",
+        content: newContent,
+        createdAt: new Date().toISOString(),
+      },
       { role: "assistant", content: "", createdAt: new Date().toISOString() },
     ]);
     setIsLoading(true);
@@ -114,7 +129,10 @@ export default function MainPage() {
             assistantText += char;
             setMessages((prev) => {
               const updated = [...prev];
-              updated[updated.length - 1] = { ...updated[updated.length - 1], content: assistantText };
+              updated[updated.length - 1] = {
+                ...updated[updated.length - 1],
+                content: assistantText,
+              };
               return updated;
             });
           });
@@ -136,6 +154,16 @@ export default function MainPage() {
 
   return (
     <div className="flex h-screen bg-[#f7f7f8] dark:bg-[#0a0a0c]">
+      {/* <Sidebar
+        isOpen={sidebarOpen}
+        onToggle={() => {
+          if (isSendingRef.current) return;
+          setSidebarOpen((prev) => !prev);
+        }}
+        onSelectChat={handleSelectChat}
+        onNewChat={handleNewChat}
+      /> */}
+
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => {
@@ -144,6 +172,7 @@ export default function MainPage() {
         }}
         onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
+        selectedChatId={currentChatId}
       />
 
       {/* min-w-0 is essential here — without it, flex children refuse to shrink below their content's natural width */}
@@ -167,19 +196,28 @@ export default function MainPage() {
                 role={msg.role}
                 content={msg.content}
                 createdAt={msg.createdAt}
-                onEdit={msg.role === "user" ? (newContent) => handleEdit(msg._id, newContent) : undefined}
+                onEdit={
+                  msg.role === "user"
+                    ? (newContent) => handleEdit(msg._id, newContent)
+                    : undefined
+                }
               />
             ))
           )}
           {isLoading && (
-            <div className="text-sm text-[#6b6b73] dark:text-[#8a8a92]">Thinking...</div>
+            <div className="text-sm text-[#6b6b73] dark:text-[#8a8a92]">
+              Thinking...
+            </div>
           )}
         </div>
 
-        <ChatInput onSend={handleSend} disabled={isLoading} tSize={tSize} onTSizeChange={setTSize} />
+        <ChatInput
+          onSend={handleSend}
+          disabled={isLoading}
+          tSize={tSize}
+          onTSizeChange={setTSize}
+        />
       </div>
     </div>
   );
 }
-
-

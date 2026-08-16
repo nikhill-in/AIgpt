@@ -1,18 +1,35 @@
 import { useState, useEffect } from "react";
-import { PlusIcon, HistoryIcon, LogOutIcon, TrashIcon, Edit, Check, X } from "lucide-react";
+import {
+  PlusIcon,
+  HistoryIcon,
+  LogOutIcon,
+  TrashIcon,
+  Edit,
+  Check,
+  X,
+} from "lucide-react";
 import { deleteChatMessages, getChats, renameChat } from "../api/chat";
 import { useAuth } from "../context/AuthContext";
 
-export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
+export default function Sidebar({
+  isOpen,
+  onToggle,
+  onSelectChat,
+  onNewChat,
+  selectedChatId, // 👈 add this
+}) {
   const { logout } = useAuth();
+
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editingId, setEditingId] = useState(null); // which chat is currently being renamed
+  const [editingId, setEditingId] = useState(null);
   const [draftTitle, setDraftTitle] = useState("");
 
   useEffect(() => {
     if (!isOpen) return;
+
     setLoading(true);
+
     getChats()
       .then(setHistory)
       .catch(() => setHistory([]))
@@ -21,11 +38,29 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
 
   const handleDelete = async (e, chatId) => {
     e.stopPropagation();
+
+    // 👇 Confirmation
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this chat?\n\nThis action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
     try {
       await deleteChatMessages(chatId);
-      setHistory((prev) => prev.filter((chat) => chat._id !== chatId));
+
+      // Remove from sidebar
+      setHistory((prev) =>
+        prev.filter((chat) => chat._id !== chatId)
+      );
+
+      // 👇 If the deleted chat is currently open,
+      // start a new chat
+      if (selectedChatId === chatId) {
+        onNewChat();
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to delete chat:", err);
     }
   };
 
@@ -43,17 +78,26 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
 
   const confirmRename = async (e, chatId) => {
     e.stopPropagation();
+
     const trimmed = draftTitle.trim();
 
-    if (!trimmed || trimmed === history.find((c) => c._id === chatId)?.title) {
+    if (
+      !trimmed ||
+      trimmed === history.find((c) => c._id === chatId)?.title
+    ) {
       cancelEditing();
       return;
     }
 
     try {
       const updated = await renameChat(chatId, trimmed);
+
       setHistory((prev) =>
-        prev.map((chat) => (chat._id === chatId ? { ...chat, title: updated.title } : chat))
+        prev.map((chat) =>
+          chat._id === chatId
+            ? { ...chat, title: updated.title }
+            : chat
+        )
       );
     } catch (err) {
       console.error(err);
@@ -63,8 +107,13 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
   };
 
   const handleTitleKeyDown = (e, chatId) => {
-    if (e.key === "Enter") confirmRename(e, chatId);
-    if (e.key === "Escape") cancelEditing(e);
+    if (e.key === "Enter") {
+      confirmRename(e, chatId);
+    }
+
+    if (e.key === "Escape") {
+      cancelEditing(e);
+    }
   };
 
   return (
@@ -84,7 +133,12 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
           className="flex h-10 items-center gap-2 rounded-lg px-3 text-[#6b6b73] transition hover:bg-[#eaeaec] hover:text-[#1a1a1e] dark:text-[#8a8a92] dark:hover:bg-[#22222a] dark:hover:text-[#f5f5f7]"
         >
           <PlusIcon size={18} className="shrink-0" />
-          {isOpen && <span className="whitespace-nowrap">New Chat</span>}
+
+          {isOpen && (
+            <span className="whitespace-nowrap">
+              New Chat
+            </span>
+          )}
         </button>
 
         <button
@@ -110,27 +164,44 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
           ) : (
             history.map((chat) => {
               const isEditing = editingId === chat._id;
+              const isSelected = selectedChatId === chat._id;
 
               return (
                 <div
                   key={chat._id}
-                  className="group flex items-center justify-between rounded-lg hover:bg-[#eaeaec] dark:hover:bg-[#22222a]"
+                  className={`
+                    group flex items-center justify-between rounded-lg
+                    ${
+                      isSelected
+                        ? "bg-[#eaeaec] dark:bg-[#22222a]"
+                        : "hover:bg-[#eaeaec] dark:hover:bg-[#22222a]"
+                    }
+                  `}
                 >
                   {isEditing ? (
                     <input
                       autoFocus
                       value={draftTitle}
-                      onChange={(e) => setDraftTitle(e.target.value)}
-                      onKeyDown={(e) => handleTitleKeyDown(e, chat._id)}
+                      onChange={(e) =>
+                        setDraftTitle(e.target.value)
+                      }
+                      onKeyDown={(e) =>
+                        handleTitleKeyDown(e, chat._id)
+                      }
                       onClick={(e) => e.stopPropagation()}
                       className="
-                        flex-1 rounded-md border border-[#ff7a18] bg-white dark:bg-[#0a0a0c]
-                        px-3 py-1.5 text-sm text-[#1a1a1e] dark:text-[#f5f5f7] outline-none
+                        flex-1 rounded-md border border-[#ff7a18]
+                        bg-white dark:bg-[#0a0a0c]
+                        px-3 py-1.5 text-sm
+                        text-[#1a1a1e] dark:text-[#f5f5f7]
+                        outline-none
                       "
                     />
                   ) : (
                     <button
-                      onClick={() => onSelectChat(chat._id)}
+                      onClick={() =>
+                        onSelectChat(chat._id)
+                      }
                       className="flex-1 truncate px-3 py-2 text-left text-sm text-[#1a1a1e] dark:text-[#d4d4d8]"
                     >
                       {chat.title}
@@ -140,12 +211,15 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
                   {isEditing ? (
                     <>
                       <button
-                        onClick={(e) => confirmRename(e, chat._id)}
+                        onClick={(e) =>
+                          confirmRename(e, chat._id)
+                        }
                         aria-label="Confirm rename"
                         className="mr-0.5 flex h-7 w-7 items-center justify-center rounded-md text-green-600 hover:bg-green-500/10"
                       >
                         <Check size={14} />
                       </button>
+
                       <button
                         onClick={cancelEditing}
                         aria-label="Cancel rename"
@@ -157,14 +231,19 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
                   ) : (
                     <>
                       <button
-                        onClick={(e) => startEditing(e, chat)}
+                        onClick={(e) =>
+                          startEditing(e, chat)
+                        }
                         aria-label="Rename chat"
                         className="mr-0.5 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:bg-green-500/10 dark:text-[#8a8a92]"
                       >
                         <Edit size={14} />
                       </button>
+
                       <button
-                        onClick={(e) => handleDelete(e, chat._id)}
+                        onClick={(e) =>
+                          handleDelete(e, chat._id)
+                        }
                         aria-label="Delete chat"
                         className="mr-2 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 dark:text-[#8a8a92]"
                       >
@@ -192,3 +271,199 @@ export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
     </aside>
   );
 }
+
+
+// import { useState, useEffect } from "react";
+// import { PlusIcon, HistoryIcon, LogOutIcon, TrashIcon, Edit, Check, X } from "lucide-react";
+// import { deleteChatMessages, getChats, renameChat } from "../api/chat";
+// import { useAuth } from "../context/AuthContext";
+
+// export default function Sidebar({ isOpen, onToggle, onSelectChat, onNewChat }) {
+//   const { logout } = useAuth();
+//   const [history, setHistory] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [editingId, setEditingId] = useState(null); // which chat is currently being renamed
+//   const [draftTitle, setDraftTitle] = useState("");
+
+//   useEffect(() => {
+//     if (!isOpen) return;
+//     setLoading(true);
+//     getChats()
+//       .then(setHistory)
+//       .catch(() => setHistory([]))
+//       .finally(() => setLoading(false));
+//   }, [isOpen]);
+
+//   const handleDelete = async (e, chatId) => {
+//     e.stopPropagation();
+//     try {
+//       await deleteChatMessages(chatId);
+//       setHistory((prev) => prev.filter((chat) => chat._id !== chatId));
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   const startEditing = (e, chat) => {
+//     e.stopPropagation();
+//     setEditingId(chat._id);
+//     setDraftTitle(chat.title);
+//   };
+
+//   const cancelEditing = (e) => {
+//     e?.stopPropagation();
+//     setEditingId(null);
+//     setDraftTitle("");
+//   };
+
+//   const confirmRename = async (e, chatId) => {
+//     e.stopPropagation();
+//     const trimmed = draftTitle.trim();
+
+//     if (!trimmed || trimmed === history.find((c) => c._id === chatId)?.title) {
+//       cancelEditing();
+//       return;
+//     }
+
+//     try {
+//       const updated = await renameChat(chatId, trimmed);
+//       setHistory((prev) =>
+//         prev.map((chat) => (chat._id === chatId ? { ...chat, title: updated.title } : chat))
+//       );
+//     } catch (err) {
+//       console.error(err);
+//     } finally {
+//       cancelEditing();
+//     }
+//   };
+
+//   const handleTitleKeyDown = (e, chatId) => {
+//     if (e.key === "Enter") confirmRename(e, chatId);
+//     if (e.key === "Escape") cancelEditing(e);
+//   };
+
+//   return (
+//     <aside
+//       className={`
+//         flex h-screen flex-col border-r border-[#e5e5e8] dark:border-[#26262c]
+//         bg-white dark:bg-[#141418]
+//         transition-all duration-300 ease-in-out
+//         ${isOpen ? "w-72" : "w-16"}
+//       `}
+//     >
+//       <div className="flex flex-col gap-1 p-2">
+//         <button
+//           onClick={onNewChat}
+//           aria-label="New chat"
+//           title="New chat"
+//           className="flex h-10 items-center gap-2 rounded-lg px-3 text-[#6b6b73] transition hover:bg-[#eaeaec] hover:text-[#1a1a1e] dark:text-[#8a8a92] dark:hover:bg-[#22222a] dark:hover:text-[#f5f5f7]"
+//         >
+//           <PlusIcon size={18} className="shrink-0" />
+//           {isOpen && <span className="whitespace-nowrap">New Chat</span>}
+//         </button>
+
+//         <button
+//           onClick={onToggle}
+//           aria-label="Toggle history"
+//           title="History"
+//           className="flex h-10 w-10 items-center justify-center rounded-lg text-[#6b6b73] dark:text-[#8a8a92] transition hover:bg-[#eaeaec] dark:hover:bg-[#22222a] hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]"
+//         >
+//           {isOpen ? <X size={18} /> : <HistoryIcon size={18} />}
+//         </button>
+//       </div>
+
+//       {isOpen && (
+//         <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 pb-2">
+//           {loading ? (
+//             <p className="px-2 py-4 text-center text-sm text-[#6b6b73] dark:text-[#8a8a92]">
+//               Loading...
+//             </p>
+//           ) : history.length === 0 ? (
+//             <p className="px-2 py-4 text-center text-sm text-[#6b6b73] dark:text-[#8a8a92]">
+//               No past chats yet
+//             </p>
+//           ) : (
+//             history.map((chat) => {
+//               const isEditing = editingId === chat._id;
+
+//               return (
+//                 <div
+//                   key={chat._id}
+//                   className="group flex items-center justify-between rounded-lg hover:bg-[#eaeaec] dark:hover:bg-[#22222a]"
+//                 >
+//                   {isEditing ? (
+//                     <input
+//                       autoFocus
+//                       value={draftTitle}
+//                       onChange={(e) => setDraftTitle(e.target.value)}
+//                       onKeyDown={(e) => handleTitleKeyDown(e, chat._id)}
+//                       onClick={(e) => e.stopPropagation()}
+//                       className="
+//                         flex-1 rounded-md border border-[#ff7a18] bg-white dark:bg-[#0a0a0c]
+//                         px-3 py-1.5 text-sm text-[#1a1a1e] dark:text-[#f5f5f7] outline-none
+//                       "
+//                     />
+//                   ) : (
+//                     <button
+//                       onClick={() => onSelectChat(chat._id)}
+//                       className="flex-1 truncate px-3 py-2 text-left text-sm text-[#1a1a1e] dark:text-[#d4d4d8]"
+//                     >
+//                       {chat.title}
+//                     </button>
+//                   )}
+
+//                   {isEditing ? (
+//                     <>
+//                       <button
+//                         onClick={(e) => confirmRename(e, chat._id)}
+//                         aria-label="Confirm rename"
+//                         className="mr-0.5 flex h-7 w-7 items-center justify-center rounded-md text-green-600 hover:bg-green-500/10"
+//                       >
+//                         <Check size={14} />
+//                       </button>
+//                       <button
+//                         onClick={cancelEditing}
+//                         aria-label="Cancel rename"
+//                         className="mr-2 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] hover:bg-[#eaeaec] dark:text-[#8a8a92] dark:hover:bg-[#22222a]"
+//                       >
+//                         <X size={14} />
+//                       </button>
+//                     </>
+//                   ) : (
+//                     <>
+//                       <button
+//                         onClick={(e) => startEditing(e, chat)}
+//                         aria-label="Rename chat"
+//                         className="mr-0.5 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:bg-green-500/10 dark:text-[#8a8a92]"
+//                       >
+//                         <Edit size={14} />
+//                       </button>
+//                       <button
+//                         onClick={(e) => handleDelete(e, chat._id)}
+//                         aria-label="Delete chat"
+//                         className="mr-2 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 dark:text-[#8a8a92]"
+//                       >
+//                         <TrashIcon size={14} />
+//                       </button>
+//                     </>
+//                   )}
+//                 </div>
+//               );
+//             })
+//           )}
+//         </div>
+//       )}
+
+//       <div className="mt-auto border-t border-[#e5e5e8] p-2 dark:border-[#26262c]">
+//         <button
+//           onClick={logout}
+//           aria-label="Logout"
+//           title="Logout"
+//           className="flex h-10 w-10 items-center justify-center rounded-lg text-[#6b6b73] dark:text-[#8a8a92] transition hover:bg-[#eaeaec] dark:hover:bg-[#22222a] hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]"
+//         >
+//           <LogOutIcon size={18} />
+//         </button>
+//       </div>
+//     </aside>
+//   );
+// }
