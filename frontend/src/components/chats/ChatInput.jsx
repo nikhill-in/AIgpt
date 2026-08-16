@@ -20,7 +20,7 @@ export default function ChatInput({ onSend, disabled }) {
   };
 
   return (
-    <div className="flex flex-col gap-2 border-t border-[#e5e5e8] dark:border-[#26262c] bg-[#9c9c9c] dark:bg-[#0a0a0c] p-4">
+    <div className="flex flex-col gap-2 border-t border-[#e5e5e8] dark:border-[#26262c] bg-[#9c9c9c] dark:bg-[#0a0a0c] p-2">
       <div className="flex items-end gap-2">
         <textarea
           value={value}
@@ -30,7 +30,7 @@ export default function ChatInput({ onSend, disabled }) {
           rows={1}
           className="
             max-h-40 flex-1 resize-none rounded-xl border border-[#e5e5e8] dark:border-[#2a2a30]
-            bg-white dark:bg-[#141418] px-4 py-3
+            bg-white dark:bg-[#141418] px-4 py-2
             text-[#1a1a1e] dark:text-[#f5f5f7] outline-none
             placeholder:text-black dark:placeholder:text-[#8a8a92]
             focus:border-[#ff7a18]
@@ -42,7 +42,7 @@ export default function ChatInput({ onSend, disabled }) {
           disabled={disabled || !value.trim()}
           className="
             rounded-xl bg-gradient-to-br from-[#ff7a18] to-[#ff4d00]
-            px-5 py-3 font-semibold text-white transition
+            px-5 py-2 font-semibold text-white transition
             hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(255,77,0,0.4)]
             disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0
           "

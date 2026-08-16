@@ -5,7 +5,7 @@ import { Lock } from "lucide-react";
 const OPTIONS = [
   { value: 700, label: "700 · Short", restricted: false },
   { value: 2200, label: "2200 · Standard", restricted: false },
-  { value: 2000, label: "2000 · Extended", restricted: true },
+  // { value: 2000, label: "2000 · Extended", restricted: true },
 ];
 
 const ALLOWED_ROLES = ["admin", "pro"];
@@ -31,8 +31,8 @@ export default function TokenSizeSelect({ value, onChange }) {
         onClick={() => setOpen((prev) => !prev)}
         className="
           flex items-center w-39  gap-2 rounded-lg border border-[#e5e5e8] dark:border-[#2a2a30]
-          bg-white dark:bg-[#141418] px-3 py-3 text-sm
-          text-[#1a1a1e] dark:text-[#f5f5f7]
+          bg-white dark:bg-[#141418] px-3 py-2 text-sm font-bold
+          text-[#1a1a1e] dark:text-[#f5f5f7] 
           hover:border-[#ff7a18] transition
         "
       >

@@ -16,7 +16,7 @@ export default function Sidebar({
   onToggle,
   onSelectChat,
   onNewChat,
-  selectedChatId, // 👈 add this
+  selectedChatId,
 }) {
   const { logout } = useAuth();
 
@@ -24,6 +24,9 @@ export default function Sidebar({
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [draftTitle, setDraftTitle] = useState("");
+  const [deleteChatId, setDeleteChatId] = useState(null);
+  const [deleteChatTitle, setDeleteChatTitle] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -36,32 +39,41 @@ export default function Sidebar({
       .finally(() => setLoading(false));
   }, [isOpen]);
 
-  const handleDelete = async (e, chatId) => {
+  const handleDelete = (e, chat) => {
     e.stopPropagation();
 
-    // 👇 Confirmation
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this chat?\n\nThis action cannot be undone."
-    );
+    setDeleteChatId(chat._id);
+    setDeleteChatTitle(chat.title);
+  };
 
-    if (!confirmed) return;
+  const confirmDelete = async () => {
+    if (!deleteChatId || isDeleting) return;
+
+    setIsDeleting(true);
 
     try {
-      await deleteChatMessages(chatId);
+      await deleteChatMessages(deleteChatId);
 
-      // Remove from sidebar
-      setHistory((prev) =>
-        prev.filter((chat) => chat._id !== chatId)
-      );
+      setHistory((prev) => prev.filter((chat) => chat._id !== deleteChatId));
 
-      // 👇 If the deleted chat is currently open,
-      // start a new chat
-      if (selectedChatId === chatId) {
+      if (selectedChatId === deleteChatId) {
         onNewChat();
       }
+
+      setDeleteChatId(null);
+      setDeleteChatTitle("");
     } catch (err) {
-      console.error("Failed to delete chat:", err);
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const cancelDelete = () => {
+    if (isDeleting) return;
+
+    setDeleteChatId(null);
+    setDeleteChatTitle("");
   };
 
   const startEditing = (e, chat) => {
@@ -81,10 +93,7 @@ export default function Sidebar({
 
     const trimmed = draftTitle.trim();
 
-    if (
-      !trimmed ||
-      trimmed === history.find((c) => c._id === chatId)?.title
-    ) {
+    if (!trimmed || trimmed === history.find((c) => c._id === chatId)?.title) {
       cancelEditing();
       return;
     }
@@ -94,10 +103,8 @@ export default function Sidebar({
 
       setHistory((prev) =>
         prev.map((chat) =>
-          chat._id === chatId
-            ? { ...chat, title: updated.title }
-            : chat
-        )
+          chat._id === chatId ? { ...chat, title: updated.title } : chat,
+        ),
       );
     } catch (err) {
       console.error(err);
@@ -125,7 +132,7 @@ export default function Sidebar({
         ${isOpen ? "w-72" : "w-16"}
       `}
     >
-      <div className="flex flex-col gap-1 p-2">
+      <div className="flex flex-col gap-1 p-2 mx-auto">
         <button
           onClick={onNewChat}
           aria-label="New chat"
@@ -134,11 +141,7 @@ export default function Sidebar({
         >
           <PlusIcon size={18} className="shrink-0" />
 
-          {isOpen && (
-            <span className="whitespace-nowrap">
-              New Chat
-            </span>
-          )}
+          {isOpen && <span className="whitespace-nowrap">New Chat</span>}
         </button>
 
         <button
@@ -182,12 +185,8 @@ export default function Sidebar({
                     <input
                       autoFocus
                       value={draftTitle}
-                      onChange={(e) =>
-                        setDraftTitle(e.target.value)
-                      }
-                      onKeyDown={(e) =>
-                        handleTitleKeyDown(e, chat._id)
-                      }
+                      onChange={(e) => setDraftTitle(e.target.value)}
+                      onKeyDown={(e) => handleTitleKeyDown(e, chat._id)}
                       onClick={(e) => e.stopPropagation()}
                       className="
                         flex-1 rounded-md border border-[#ff7a18]
@@ -199,9 +198,7 @@ export default function Sidebar({
                     />
                   ) : (
                     <button
-                      onClick={() =>
-                        onSelectChat(chat._id)
-                      }
+                      onClick={() => onSelectChat(chat._id)}
                       className="flex-1 truncate px-3 py-2 text-left text-sm text-[#1a1a1e] dark:text-[#d4d4d8]"
                     >
                       {chat.title}
@@ -211,9 +208,7 @@ export default function Sidebar({
                   {isEditing ? (
                     <>
                       <button
-                        onClick={(e) =>
-                          confirmRename(e, chat._id)
-                        }
+                        onClick={(e) => confirmRename(e, chat._id)}
                         aria-label="Confirm rename"
                         className="mr-0.5 flex h-7 w-7 items-center justify-center rounded-md text-green-600 hover:bg-green-500/10"
                       >
@@ -231,9 +226,7 @@ export default function Sidebar({
                   ) : (
                     <>
                       <button
-                        onClick={(e) =>
-                          startEditing(e, chat)
-                        }
+                        onClick={(e) => startEditing(e, chat)}
                         aria-label="Rename chat"
                         className="mr-0.5 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:bg-green-500/10 dark:text-[#8a8a92]"
                       >
@@ -241,9 +234,7 @@ export default function Sidebar({
                       </button>
 
                       <button
-                        onClick={(e) =>
-                          handleDelete(e, chat._id)
-                        }
+                        onClick={(e) => handleDelete(e, chat)}
                         aria-label="Delete chat"
                         className="mr-2 flex h-7 w-7 items-center justify-center rounded-md text-[#6b6b73] opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 dark:text-[#8a8a92]"
                       >
@@ -258,20 +249,103 @@ export default function Sidebar({
         </div>
       )}
 
-      <div className="mt-auto border-t border-[#e5e5e8] p-2 dark:border-[#26262c]">
+      <div className="mt-auto mx-auto border-t border-[#e5e5e8] p-1.5 dark:border-[#26262c]">
         <button
           onClick={logout}
           aria-label="Logout"
           title="Logout"
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-[#6b6b73] dark:text-[#8a8a92] transition hover:bg-[#eaeaec] dark:hover:bg-[#22222a] hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]"
+          className="flex h-11 w-10 items-center justify-center rounded-lg text-[#6b6b73] dark:text-[#8a8a92] transition hover:bg-[#eaeaec] dark:hover:bg-[#22222a] hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]"
         >
           <LogOutIcon size={18} />
         </button>
       </div>
+
+      {deleteChatId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
+          onClick={cancelDelete}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="
+        w-full max-w-md
+        rounded-2xl
+        border border-[#e5e5e8]
+        bg-white
+        p-6
+        shadow-2xl
+        dark:border-[#2a2a32]
+        dark:bg-[#18181d]
+      "
+          >
+            {/* Icon */}
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10">
+              <TrashIcon size={20} className="text-red-500" />
+            </div>
+
+            {/* Heading */}
+            <h2 className="text-lg font-semibold text-[#1a1a1e] dark:text-[#f5f5f7]">
+              Delete chat?
+            </h2>
+
+            {/* Description */}
+            <p className="mt-2 text-sm leading-6 text-[#6b6b73] dark:text-[#8a8a92]">
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-[#1a1a1e] dark:text-[#f5f5f7]">
+                "{deleteChatTitle}"
+              </span>
+              ?
+              <br />
+              This action cannot be undone.
+            </p>
+
+            {/* Buttons */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={cancelDelete}
+                disabled={isDeleting}
+                className="
+            rounded-lg
+            px-4 py-2
+            text-sm font-medium
+            text-[#6b6b73]
+            transition
+            hover:bg-[#eaeaec]
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+            dark:text-[#a1a1aa]
+            dark:hover:bg-[#26262c]
+          "
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="
+            flex min-w-[90px]
+            items-center justify-center
+            rounded-lg
+            bg-red-500
+            px-4 py-2
+            text-sm font-medium
+            text-white
+            transition
+            hover:bg-red-600
+            disabled:cursor-not-allowed
+            disabled:opacity-60
+          "
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
-
 
 // import { useState, useEffect } from "react";
 // import { PlusIcon, HistoryIcon, LogOutIcon, TrashIcon, Edit, Check, X } from "lucide-react";
