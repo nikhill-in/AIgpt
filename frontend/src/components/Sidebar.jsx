@@ -132,7 +132,7 @@ export default function Sidebar({
         ${isOpen ? "w-72" : "w-16"}
       `}
     >
-      <div className="flex flex-col gap-1 p-2 mx-auto">
+      <div className={`flex gap-1 p-2 flex-col`}>
         <button
           onClick={onNewChat}
           aria-label="New chat"
@@ -249,7 +249,7 @@ export default function Sidebar({
         </div>
       )}
 
-      <div className="mt-auto mx-auto border-t border-[#e5e5e8] p-1.5 dark:border-[#26262c]">
+      <div className="mt-auto  border-t border-[#e5e5e8] p-1.5 dark:border-[#26262c]">
         <button
           onClick={logout}
           aria-label="Logout"

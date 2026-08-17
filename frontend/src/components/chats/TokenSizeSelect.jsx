@@ -3,18 +3,19 @@ import { useAuth } from "../../context/AuthContext";
 import { Lock } from "lucide-react";
 
 const OPTIONS = [
-  { value: 700, label: "700 · Short", restricted: false },
-  { value: 2200, label: "2200 · Standard", restricted: false },
-  // { value: 2000, label: "2000 · Extended", restricted: true },
+  { value: 700, label: " Short", restricted: false },
+  { value: 2200, label: " Standard", restricted: false },
+  { value: 3000, label: " Extended", restricted: false },
 ];
 
 const ALLOWED_ROLES = ["admin", "pro"];
 
 export default function TokenSizeSelect({ value, onChange }) {
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
-  const hasAccess = ALLOWED_ROLES.includes(user?.role);
+  const hasAccess = ALLOWED_ROLES.includes("pro");
+  // const hasAccess = ALLOWED_ROLES.includes(user?.role);
 
   const handleSelect = (option) => {
     if (option.restricted && !hasAccess) return; // guard against selecting a locked option
@@ -31,7 +32,7 @@ export default function TokenSizeSelect({ value, onChange }) {
         onClick={() => setOpen((prev) => !prev)}
         className="
           flex items-center w-39  gap-2 rounded-lg border border-[#e5e5e8] dark:border-[#2a2a30]
-          bg-white dark:bg-[#141418] px-3 py-2 text-sm font-bold
+          bg-white dark:bg-[#141418] px-3 py-2 text-sm font-bold text-center
           text-[#1a1a1e] dark:text-[#f5f5f7] 
           hover:border-[#ff7a18] transition
         "
@@ -58,7 +59,7 @@ export default function TokenSizeSelect({ value, onChange }) {
                 disabled={locked}
                 onClick={() => handleSelect(option)}
                 className={`
-                  flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm
+                  flex w-full items-center text-center justify-between rounded-lg px-3 py-2 text-sm
                   transition
                   ${locked
                     ? "cursor-not-allowed text-[#a0a0a6] dark:text-[#5a5a60]"
