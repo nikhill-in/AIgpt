@@ -4,6 +4,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { MoonIcon, SunDimIcon } from "lucide-react";
 import logoDark from "../../assets/LogoDark.png";
 import logoLight from "../../assets/logoLight.png";
+import { href, Link } from "react-router-dom";
 
 export default function ChatHeader({ onHistoryClick }) {
   const { user, logout } = useAuth();
@@ -26,14 +27,13 @@ export default function ChatHeader({ onHistoryClick }) {
 
   return (
     <div className="flex items-center justify-between border-b border-[#e5e5e8] dark:border-[#26262c] bg-[#9c9c9c] dark:bg-[#0a0a0c] px-6">
-      
-
+      <Link to="/">
         <img
           src={isDark ? logoDark : logoLight}
           alt="ZoomCon"
           className="h-20 w-auto"
         />
-      
+      </Link>
 
       <div className="flex items-center gap-3">
         <button
@@ -90,4 +90,3 @@ export default function ChatHeader({ onHistoryClick }) {
     </div>
   );
 }
-

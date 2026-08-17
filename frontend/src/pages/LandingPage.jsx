@@ -5,11 +5,18 @@ import LoginModal from "../components/LoginModel.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import logoDark from "../assets/logoDark.png";
 import logoLight from "../assets/logoLight.png";
-import { MoonIcon, SunDimIcon } from "lucide-react";
+import {
+  LogInIcon,
+  LogOut,
+  LogOutIcon,
+  MoonIcon,
+  SunDimIcon,
+} from "lucide-react";
+import { logoutUser } from "../api/auth.js";
 
 export default function LandingPage() {
   const [showLogin, setShowLogin] = useState(false);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   const navigate = useNavigate();
@@ -48,17 +55,25 @@ export default function LandingPage() {
           >
             {isDark ? <SunDimIcon /> : <MoonIcon />}
           </button>
-          <button
-            onClick={() => setShowLogin(true)}
-            className="
-            rounded-[10px] border border-[#d4d4d8] dark:border-[#33333a] bg-transparent
-            px-5 py-2 text-sm font-medium text-[#1a1a1e] dark:text-[#f5f5f7]
-            transition duration-200
-            hover:border-[#ff7a18] hover:text-[#ff7a18]
-          "
-          >
-            Log in
-          </button>
+
+          {isLoggedIn ? (
+            <button
+              onClick={logout}
+              aria-label="Logout"
+              title="Logout"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-[#6b6b73] dark:text-[#8a8a92] transition hover:bg-[#d73b3b34] dark:hover:bg-[#d73b3b34] hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]"
+            >
+              <LogOutIcon size={18} />
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLogin(true)}
+              title="Login"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-[#6b6b73] dark:text-[#8a8a92] transition hover:bg-[#d7963b34] dark:hover:bg-[#d7913b34] hover:text-[#1a1a1e] dark:hover:text-[#f5f5f7]"
+            >
+              <LogInIcon size={18} />
+            </button>
+          )}
         </div>
       </header>
 

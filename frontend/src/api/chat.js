@@ -1,6 +1,5 @@
 import api from "./axios";
 
-
 // send message ================
 
 export async function sendMessageStream(
@@ -16,6 +15,11 @@ export async function sendMessageStream(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chatId, content, tSize }),
   });
+
+  if (response.status === 401) {
+    window.location.href = "/";
+    return;
+  }
 
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
@@ -67,34 +71,69 @@ export async function sendMessageStream(
 
 export async function getChats() {
   const res = await api.get(`/user/chats`);
+
+    if (res.status === 401) {
+    window.location.href = "/";
+    return;
+  }
+
   return res.data;
 }
 
 export async function getChatMessages(chatId) {
   const res = await api.get(`/user/message/${chatId}`);
+
+    if (res.status === 401) {
+    window.location.href = "/";
+    return;
+  }
+
   return res.data;
 }
 
 export async function deleteChatMessages(chatId) {
   const res = await api.delete(`/user/message/${chatId}`);
+
+    if (res.status === 401) {
+    window.location.href = "/";
+    return;
+  }
+
   return res.data;
 }
 
 export async function renameChat(chatId, title) {
   const res = await api.patch(`/user/rename/${chatId}`, { title });
+
+    if (res.status === 401) {
+    window.location.href = "/";
+    return;
+  }
+
   return res.data;
 }
 
-
 //edit message===========
 
-export async function editMessageStream(messageId, content, onToken, onChatId, tSize) {
+export async function editMessageStream(
+  messageId,
+  content,
+  onToken,
+  onChatId,
+  tSize,
+) {
   const response = await fetch(`${import.meta.env.VITE_API_URL}/user/edit`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messageId, content, tSize }),
   });
+
+    if (response.status === 401) {
+    window.location.href = "/";
+    return;
+  }
+
 
   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
 

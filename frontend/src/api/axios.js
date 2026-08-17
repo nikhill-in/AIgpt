@@ -12,7 +12,7 @@ api.interceptors.response.use(
       // Token expired or invalid — force back to landing page
       // Full reload (not React Router navigate) ensures AuthContext's
       // state resets completely, not just the URL
-      window.location.href = "/";
+      // window.location.href = "/";
     }
     return Promise.reject(error); // still let individual .catch() blocks run for other error types
   }
