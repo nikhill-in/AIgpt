@@ -4,7 +4,7 @@ import Message from "../model/message.model.js";
 import ApiError from "../utils/ApiError.js";
 import catchAsync from "../utils/catchAsync.js";
 
-const ALLOWED_ROLES = ["admin", "pro"];
+const ALLOWED_ROLES = ["pro"];
 
 // send controller
 
@@ -20,7 +20,7 @@ export const sendMessage = catchAsync(async (req, res) => {
     throw new ApiError(400, "Content is required");
   }
 
-  if (tSize === 2000 && !ALLOWED_ROLES.includes(req.user.role)) {
+  if (tSize === 20000 && !ALLOWED_ROLES.includes(req.user.role)) {
     throw new ApiError(403, "Not authorized for this token size");
   }
 
