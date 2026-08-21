@@ -18,15 +18,12 @@ export const sendMessage = catchAsync(async (req, res) => {
     throw new ApiError(401, "Please login to continue");
   }
   
-  const tokenSize = getTokenSize(tSize, req.user.role);
-
+  
   if (!content) {
     throw new ApiError(400, "Content is required");
   }
-
-  if (tSize === "Extended" && !ALLOWED_ROLES.includes(req.user.role)) {
-    throw new ApiError(403, "Not authorized for this token size");
-  }
+  
+  const tokenSize = getTokenSize(tSize, req.user.role);
 
   let chat = chatId ? await Chat.findOne({ _id: chatId, user: userId }) : null;
 
@@ -80,11 +77,12 @@ export const editMessage = catchAsync(async (req, res) => {
     throw new ApiError(401, "Please login to continue");
   }
   
-  const tokenSize = getTokenSize(tSize, req.user.role);
   
   if (!content?.trim()) {
     throw new ApiError(400, "Content is required");
   }
+  
+  const tokenSize = getTokenSize(tSize, req.user.role);
 
   const targetMessage = await Message.findById(messageId);
   if (!targetMessage) {

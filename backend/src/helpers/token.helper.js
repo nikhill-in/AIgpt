@@ -1,3 +1,5 @@
+import ApiError from "../utils/ApiError.js";
+
 const TOKEN_LIMITS = {
   Short: 700,
   Standard: 2200,
@@ -5,9 +7,12 @@ const TOKEN_LIMITS = {
 };
 
 export const getTokenSize = (tSize, role) => {
+      console.log("tSize", tSize);
+
   const tokenSize = TOKEN_LIMITS[tSize];
 
   if (!tokenSize) {
+    console.error("tokenSize", tokenSize);
     throw new ApiError(400, "Invalid token size");
   }
 
