@@ -3,7 +3,7 @@ import TokenSizeSelect from "./TokenSizeSelect";
 
 export default function ChatInput({ onSend, disabled }) {
   const [value, setValue] = useState("");
-  const [maxTokens, setMaxTokens] = useState(700);
+  const [maxTokens, setMaxTokens] = useState("short");
 
   const handleSend = () => {
     const trimmed = value.trim();

@@ -7,7 +7,7 @@ export function ThemeProvider({ children }) {
     () => localStorage.getItem("theme") || "dark"
   );
   useEffect(() => {
-  console.log("theme effect running:", theme); // TEMP DEBUG
+  // console.log("theme effect running:", theme); // TEMP DEBUG
   localStorage.setItem("theme", theme);
   document.documentElement.classList.toggle("dark", theme === "dark");
 }, [theme]);

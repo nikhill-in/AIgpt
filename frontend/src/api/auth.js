@@ -7,7 +7,7 @@ export const registerUser = (email, password) =>
   api.post("/auth/register", { email, password });
 
 export const proUser = () =>
-  api.put("/auth/pro", { role: "pro" });
+  api.put("/auth/update", { role: "pro" });
 
 
 export const logoutUser = () => api.post("/auth/logout");

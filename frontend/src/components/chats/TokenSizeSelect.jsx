@@ -1,29 +1,40 @@
-import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
+import { getTokenOptions } from "../../api/chat";
 
-const OPTIONS = [
-  { value: 700, label: " Short", restricted: false },
-  { value: 2200, label: " Standard", restricted: false },
-  { value: 3000, label: " Extended", restricted: false },
-];
-
-const ALLOWED_ROLES = ["admin", "pro"];
-
-export default function TokenSizeSelect({ value, onChange }) {
-  // const { user } = useAuth();
+export default function TokenSizeSelect({ value, onChange, onProClick }) {
+  const [options, setOptions] = useState([]);
+  const [isPro, setIsPro] = useState(false);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const hasAccess = ALLOWED_ROLES.includes("pro");
-  // const hasAccess = ALLOWED_ROLES.includes(user?.role);
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const response = await getTokenOptions();
 
-  const handleSelect = (option) => {
-    if (option.restricted && !hasAccess) return; // guard against selecting a locked option
-    onChange(option.value);
-    setOpen(false);
-  };
+        setOptions(response.data.options);
+        setIsPro(response.data.isPro);
+      } catch (error) {
+        console.error("Failed to load token options", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const selected = OPTIONS.find((o) => o.value === value) || OPTIONS[0];
+    fetchOptions();
+  }, []);
+
+  const selected =
+    options.find((option) => option.label === value) || options[0];
+
+  if (loading) {
+    return (
+      <div className="w-39 rounded-lg border border-[#e5e5e8] px-3 py-2 text-sm">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -31,14 +42,18 @@ export default function TokenSizeSelect({ value, onChange }) {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className="
-          flex items-center w-39  gap-2 rounded-lg border border-[#e5e5e8] dark:border-[#2a2a30]
-          bg-white dark:bg-[#141418] px-3 py-2 text-sm font-bold text-center
-          text-[#1a1a1e] dark:text-[#f5f5f7] 
+          flex w-39 items-center justify-center gap-2 rounded-lg
+          border border-[#e5e5e8] dark:border-[#2a2a30]
+          bg-white dark:bg-[#141418]
+          px-3 py-2 text-sm font-bold
+          text-[#1a1a1e] dark:text-[#f5f5f7]
           hover:border-[#ff7a18] transition
         "
       >
-        {selected.label}
-        <span className="text-xl absolute rotate-180 transition-all right-4">▾</span>
+        {selected?.label || "Select"}
+        <span className="absolute right-4 rotate-180 text-xl">
+          ▾
+        </span>
       </button>
 
       {open && (
@@ -47,30 +62,49 @@ export default function TokenSizeSelect({ value, onChange }) {
             absolute bottom-11 left-0 w-44 rounded-xl border
             border-[#e5e5e8] dark:border-[#26262c]
             bg-white dark:bg-[#141418] p-1
-            shadow-[0_20px_80px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_80px_rgba(0,0,0,0.6)]
+            shadow-[0_20px_80px_rgba(0,0,0,0.15)]
+            dark:shadow-[0_20px_80px_rgba(0,0,0,0.6)]
           "
         >
-          {OPTIONS.map((option) => {
-            const locked = option.restricted && !hasAccess;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                disabled={locked}
-                onClick={() => handleSelect(option)}
-                className={`
-                  flex w-full items-center text-center justify-between rounded-lg px-3 py-2 text-sm
-                  transition
-                  ${locked
-                    ? "cursor-not-allowed text-[#a0a0a6] dark:text-[#5a5a60]"
-                    : "text-[#1a1a1e] dark:text-[#f5f5f7] hover:bg-[#eaeaec] dark:hover:bg-[#22222a]"}
-                `}
-              >
-                {option.label}
-                {locked && <span className="text-xs"><Lock/></span>}
-              </button>
-            );
-          })}
+          {options.map((option) => (
+            <button
+              key={option.label}
+              type="button"
+              onClick={() => {
+                onChange(option.label);
+                setOpen(false);
+              }}
+              className="
+                flex w-full items-center justify-between
+                rounded-lg px-3 py-2 text-sm
+                text-[#1a1a1e] dark:text-[#f5f5f7]
+                hover:bg-[#eaeaec] dark:hover:bg-[#22222a]
+                transition
+              "
+            >
+              {option.label}
+            </button>
+          ))}
+
+          {!isPro && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onProClick?.();
+              }}
+              className="
+                flex w-full items-center justify-between
+                rounded-lg px-3 py-2 text-sm
+                font-semibold text-orange-600
+                hover:bg-orange-50
+                dark:hover:bg-orange-950/30
+              "
+            >
+              Extended
+              <Lock size={14} />
+            </button>
+          )}
         </div>
       )}
     </div>
