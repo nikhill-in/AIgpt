@@ -6,7 +6,7 @@ import logoDark from "../../assets/LogoDark.png";
 import logoLight from "../../assets/logoLight.png";
 import { href, Link } from "react-router-dom";
 
-export default function ChatHeader({ onHistoryClick }) {
+export default function ChatHeader({ onHistoryClick, onProClick }) {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -74,7 +74,7 @@ export default function ChatHeader({ onHistoryClick }) {
                 History
               </button>
               <button
-                onClick={onHistoryClick}
+                onClick={onProClick}
                 className="
     group               /* Add 'group' here */
     w-full rounded-lg px-3 py-2 text-left

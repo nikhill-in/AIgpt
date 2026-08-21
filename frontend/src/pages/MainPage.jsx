@@ -8,6 +8,7 @@ import {
   editMessageStream,
 } from "../api/chat";
 import Sidebar from "../components/Sidebar";
+import { proUser } from "../api/auth";
 
 function revealGradually(chunk, onChar, speedMs = 15) {
   return new Promise((resolve) => {
@@ -36,6 +37,15 @@ export default function MainPage() {
     if (isSendingRef.current) return;
     setCurrentChatId(null);
     setMessages([]);
+  };
+  const handlePro = () => {
+    proUser()
+      .then((res) => {
+        console.log("User upgraded to pro:", res.data);
+      })
+      .catch((err) => {
+        console.error("Error upgrading user to pro:", err);
+      });
   };
 
   const handleSelectChat = async (chatId) => {
@@ -182,6 +192,7 @@ export default function MainPage() {
             if (isSendingRef.current) return;
             setSidebarOpen((prev) => !prev);
           }}
+          onProClick={() => handlePro()}
         />
 
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">

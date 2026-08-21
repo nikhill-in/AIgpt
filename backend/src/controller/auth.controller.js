@@ -92,8 +92,7 @@ export const updateUser = catchAsync(async (req, res) => {
 
   const user = await User.findByIdAndUpdate(
     req.user.id,
-    { name, email }, // I want to update user like when I do task on frontend from there the user role will become pro for 1 month and after that it will become user again what i do ?
-      // You can implement a scheduled job or a cron job that runs daily to check for users whose "pro" status has expired and update their role back to "user". You would need to store the expiration date of the "pro" status in the user model and then check against that date in your scheduled job.
+    { name, email }, 
     { new: true, runValidators: true }
   ).select("-password");
 
