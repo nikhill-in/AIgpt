@@ -5,11 +5,7 @@ import {
   generateRefreshToken,
 } from "../helpers/jwt.helper.js";
 import catchAsync from "../utils/catchAsync.js";
-import ApiError from "../utils/apiError.js";
-
-
-
-
+import ApiError from "../utils/ApiError.js";
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -31,6 +27,8 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
 };
+
+// Register User ============
 
 export const register = async (req, res) => {
   try {
@@ -60,7 +58,12 @@ export const register = async (req, res) => {
     return res.status(201).json({
       status: true,
       message: "Registered successfully",
-      user: { id: user._id, email: user.email, name: user.name },
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
     });
   } catch (err) {
     console.error(err);
@@ -71,8 +74,7 @@ export const register = async (req, res) => {
   }
 };
 
-
-
+// Login User ==============
 
 export const login = async (req, res) => {
   console.log("Trying to Login...");
@@ -107,7 +109,12 @@ export const login = async (req, res) => {
     return res.status(200).json({
       status: true,
       message: "Logged in successfully",
-      user: { id: user._id, email: user.email, name: user.name, role: user.role },
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
     });
   } catch (err) {
     console.error(err);
@@ -118,21 +125,43 @@ export const login = async (req, res) => {
   }
 };
 
+// Update user ===============
 export const updateUser = catchAsync(async (req, res) => {
-  const { role } = req.body;
+  const allowedFields = ["name", "email", "role"];
+
+  const updates = {};
+
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) {
+      updates[field] = req.body[field];
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new ApiError(400, "No valid fields to update");
+  }
 
   const user = await User.findByIdAndUpdate(
     req.user.id,
-    { role },
-    { new: true, runValidators: true },
+    { $set: updates },
+    {
+      new: true,
+      runValidators: true,
+    },
   ).select("-password");
 
   if (!user) {
     throw new ApiError(404, "User not found");
   }
 
-  res.status(200).json({ status: true, message: "Pro feature enabled", user });
+  res.status(200).json({
+    status: true,
+    message: "User updated successfully",
+    user: { id: user._id, email: user.email, name: user.name, role: user.role },
+  });
 });
+
+// logout Controller ============
 
 export const logout = async (req, res) => {
   try {
@@ -151,6 +180,8 @@ export const logout = async (req, res) => {
   }
 };
 
+// getMe Controller ================
+
 export const getMe = catchAsync(async (req, res) => {
   console.log("this is req. user", req.user);
   const user = await User.findById(req.user.id).select("-password");
@@ -159,9 +190,21 @@ export const getMe = catchAsync(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  res.json({ user });
+  res
+    .status(200)
+    .json({
+      success: true,
+      message: Successfull,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      }
+    });
 });
 
+// getToken Controller ==============
 
 export const getTokenOptions = catchAsync(async (req, res) => {
   const user = await User.findById(req.user.id).select("role proExpiresAt");
@@ -171,26 +214,15 @@ export const getTokenOptions = catchAsync(async (req, res) => {
   }
 
   const TOKEN_OPTIONS = {
-  user: [
-    {label: "Short" },
-    { label: "Standard" },
-  ],
+    user: [{ label: "Short" }, { label: "Standard" }],
 
-  pro: [
-    {label: "Short" },
-    { label: "Standard" },
-    { label: "Extended" },
-  ],
-};
+    pro: [{ label: "Short" }, { label: "Standard" }, { label: "Extended" }],
+  };
 
   const isPro =
-    user.role === "pro" &&
-    user.proExpiresAt &&
-    user.proExpiresAt > new Date();
+    user.role === "pro" && user.proExpiresAt && user.proExpiresAt > new Date();
 
-  const options = isPro
-    ? TOKEN_OPTIONS.pro
-    : TOKEN_OPTIONS.user;
+  const options = isPro ? TOKEN_OPTIONS.pro : TOKEN_OPTIONS.user;
 
   res.status(200).json({
     status: true,

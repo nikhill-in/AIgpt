@@ -1,39 +1,75 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { loginUser, logoutUser, getCurrentUser } from "../api/auth";
+import { createContext, useContext, useEffect, useState } from "react";
+import {
+  loginUser,
+  logoutUser,
+  getCurrentUser,
+} from "../api/auth";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true); // true until initial check completes
+  const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
+  // Check existing authentication on app startup
   useEffect(() => {
-    getCurrentUser()
-      .then((res) => setUser(res.data.user))
-      .catch(() => setUser(null)) // no valid cookie — stay logged out, not an error to show
-      .finally(() => setAuthLoading(false));
+    const checkAuth = async () => {
+      try {
+        const res = await getCurrentUser();
+        setUser(res.data.user);
+      } catch {
+        setUser(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (email, password) => {
     setAuthError(null);
+
     try {
       const res = await loginUser(email, password);
+
       setUser(res.data.user);
+
+      return res.data.user;
     } catch (err) {
-      setAuthError(err.response?.data?.message || "Login failed");
+      setAuthError(
+        err.response?.data?.message || "Login failed"
+      );
+
       throw err;
     }
   };
 
   const logout = async () => {
-    await logoutUser();
-    setUser(null);
+    try {
+      await logoutUser();
+    } finally {
+      setUser(null);
+    }
+  };
+
+  // Update user everywhere immediately without another API request
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoggedIn: !!user, login, logout, authLoading, authError }}
+      value={{
+        user,
+        isLoggedIn: !!user,
+        authLoading,
+        authError,
+        login,
+        logout,
+        updateUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

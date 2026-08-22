@@ -9,6 +9,7 @@ import {
 } from "../api/chat";
 import Sidebar from "../components/Sidebar";
 import { proUser } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 
 function revealGradually(chunk, onChar, speedMs = 15) {
   return new Promise((resolve) => {
@@ -30,6 +31,7 @@ export default function MainPage() {
   const [currentChatId, setCurrentChatId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tSize, setTSize] = useState(700);
+  const { updateUser } = useAuth();
 
   const isSendingRef = useRef(false);
 
@@ -38,15 +40,18 @@ export default function MainPage() {
     setCurrentChatId(null);
     setMessages([]);
   };
-  
-  const handlePro = () => {
-    proUser()
-      .then((res) => {
-        console.log("User upgraded to pro:", res.data);
-      })
-      .catch((err) => {
-        console.error("Error upgrading user to pro:", err);
-      });
+
+  const handlePro = async () => {
+    try {
+      const res = await proUser();
+
+      updateUser(res.data.user);
+    } catch (err) {
+      console.error(
+        "User update failed:",
+        err.response?.data?.message || err.message,
+      );
+    }
   };
 
   const handleSelectChat = async (chatId) => {
