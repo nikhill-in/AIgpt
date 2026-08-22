@@ -9,18 +9,7 @@ import ApiError from "../utils/apiError.js";
 
 
 
-const TOKEN_OPTIONS = {
-  user: [
-    { value: 700, label: "Short" },
-    { value: 2200, label: "Standard" },
-  ],
 
-  pro: [
-    { value: 700, label: "Short" },
-    { value: 2200, label: "Standard" },
-    { value: 3000, label: "Extended" },
-  ],
-};
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -180,6 +169,19 @@ export const getTokenOptions = catchAsync(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found");
   }
+
+  const TOKEN_OPTIONS = {
+  user: [
+    {label: "Short" },
+    { label: "Standard" },
+  ],
+
+  pro: [
+    {label: "Short" },
+    { label: "Standard" },
+    { label: "Extended" },
+  ],
+};
 
   const isPro =
     user.role === "pro" &&

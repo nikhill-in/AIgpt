@@ -24,11 +24,30 @@ export async function chatService(input, instructions, onChunk, tSize) {
 
   console.log("STATUS:", response.status, response.statusText);
 
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error("GEMINI ERROR BODY:", errText);
-    throw new Error(`Gemini API error ${response.status}: ${errText}`);
+ if (!response.ok) {
+  const errText = await response.text();
+
+  console.error(
+    `Gemini API error ${response.status}:`,
+    errText
+  );
+
+  if (response.status === 503) {
+    throw new Error(
+      "AI service is temporarily busy. Please try again in a moment."
+    );
   }
+
+  if (response.status === 429) {
+    throw new Error(
+      "Too many requests. Please wait a moment and try again."
+    );
+  }
+
+  throw new Error(
+    "AI service is currently unavailable. Please try again later."
+  );
+}
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();

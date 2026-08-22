@@ -38,6 +38,7 @@ export default function MainPage() {
     setCurrentChatId(null);
     setMessages([]);
   };
+  
   const handlePro = () => {
     proUser()
       .then((res) => {
@@ -56,7 +57,7 @@ export default function MainPage() {
       const msgs = await getChatMessages(chatId);
       setMessages(msgs);
     } catch (err) {
-      console.log(err);
+      console.error("Error fetching chat messages:", err);
     } finally {
       setIsLoading(false);
     }
@@ -101,10 +102,15 @@ export default function MainPage() {
         size,
       );
     } catch (err) {
-      console.log(err);
+      console.error("Message generation failed:", err);
+
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "assistant", content: "Something went wrong. Try again." },
+        {
+          role: "assistant",
+          content: err.message || "Something went wrong. Please try again.",
+          createdAt: new Date().toISOString(),
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -151,10 +157,14 @@ export default function MainPage() {
         tSize,
       );
     } catch (err) {
-      console.log(err);
+      console.error("Message generation failed:", err);
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "assistant", content: "Something went wrong. Try again." },
+        {
+          role: "assistant",
+          content: err.message || "Something went wrong. Please try again.",
+          createdAt: new Date().toISOString(),
+        },
       ]);
     } finally {
       setIsLoading(false);

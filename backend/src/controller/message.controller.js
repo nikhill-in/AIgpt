@@ -61,10 +61,16 @@ export const sendMessage = catchAsync(async (req, res) => {
     res.write("data: [DONE]\n\n");
     res.end();
   } catch (err) {
-    console.error(err);
-    res.write(`data: ${JSON.stringify({ error: "Generation failed" })}\n\n`);
-    res.end();
-  }
+  console.error("AI generation error:", err);
+
+  res.write(
+    `data: ${JSON.stringify({
+      error: err.message || "Generation failed",
+    })}\n\n`
+  );
+
+  res.end();
+}
 });
 
 // edit Controller
@@ -124,8 +130,14 @@ export const editMessage = catchAsync(async (req, res) => {
     res.write("data: [DONE]\n\n");
     res.end();
   } catch (err) {
-    console.error(err);
-    res.write(`data: ${JSON.stringify({ error: "Generation failed" })}\n\n`);
-    res.end();
-  }
+  console.error("AI generation error:", err);
+
+  res.write(
+    `data: ${JSON.stringify({
+      error: err.message || "Generation failed",
+    })}\n\n`
+  );
+
+  res.end();
+}
 });

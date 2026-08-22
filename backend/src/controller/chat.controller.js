@@ -1,6 +1,6 @@
 import Chat from "../model/chat.model.js";
 import Message from "../model/message.model.js";
-import ApiError from "../utils/apiError.js";
+import ApiError from "../utils/ApiError.js";
 import catchAsync from "../utils/catchAsync.js";
 
 // get All chats ==============
