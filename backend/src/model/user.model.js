@@ -5,20 +5,29 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
- role: {
+
+  role: {
     type: String,
     enum: ["user", "pro"],
     default: "user",
   },
+
+  proExpiresAt: {
+    type: Date,
+    default: null,
+  },
+
   email: {
     type: String,
     required: true,
     unique: true,
   },
+
   password: {
     type: String,
     required: true,
   },
+
   createdAt: {
     type: Date,
     default: Date.now,

@@ -4,7 +4,6 @@ import api from "./axios";
 
 
 
-export const getTokenOptions = () => api.get("/auth/token-options");
 
 // send message ================
 

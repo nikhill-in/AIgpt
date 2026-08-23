@@ -127,7 +127,7 @@ export const login = async (req, res) => {
 
 // Update user ===============
 export const updateUser = catchAsync(async (req, res) => {
-  const allowedFields = ["name", "email", "role"];
+  const allowedFields = ["name", "email", "role", "proExpiresAt"];
 
   const updates = {};
 
@@ -157,7 +157,13 @@ export const updateUser = catchAsync(async (req, res) => {
   res.status(200).json({
     status: true,
     message: "User updated successfully",
-    user: { id: user._id, email: user.email, name: user.name, role: user.role },
+    user: {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      proExpiresAt: user.proExpiresAt,
+    },
   });
 });
 
@@ -190,18 +196,17 @@ export const getMe = catchAsync(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  res
-    .status(200)
-    .json({
-      success: true,
-      message: Successfull,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      }
-    });
+  res.status(200).json({
+    success: true,
+    message: "Successful",
+    user: {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      proExpiresAt: user.proExpiresAt,
+    },
+  });
 });
 
 // getToken Controller ==============
