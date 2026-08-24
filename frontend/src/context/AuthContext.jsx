@@ -10,7 +10,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [tokenOptions, setTokenOptions] = useState([]);
+  const [tokenOptions, setTokenOptions] = useState([]); 
   const [isPro, setIsPro] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
@@ -109,7 +109,7 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+AuthProvider.useAuth = () => useContext(AuthContext);
 
 
 // import { createContext, useContext, useEffect, useState } from "react";

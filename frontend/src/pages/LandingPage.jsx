@@ -1,22 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import { AuthProvider } from "../context/AuthContext.jsx";
 import LoginModal from "../components/LoginModel.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import logoDark from "../assets/logoDark.png";
 import logoLight from "../assets/logoLight.png";
 import {
   LogInIcon,
-  LogOut,
   LogOutIcon,
   MoonIcon,
   SunDimIcon,
 } from "lucide-react";
-import { logoutUser } from "../api/auth.js";
 
 export default function LandingPage() {
   const [showLogin, setShowLogin] = useState(false);
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout } = AuthProvider.useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   const navigate = useNavigate();

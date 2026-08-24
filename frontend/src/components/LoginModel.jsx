@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { AuthProvider } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import logoDark from "../assets/logoDark.png";
 import logoLight from "../assets/logoLight.png";
 
 export default function LoginModal({ onClose, pendingPrompt, onLoginSuccess }) {
-  const { login } = useAuth();
+  const { login } = AuthProvider.useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

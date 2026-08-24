@@ -160,3 +160,8 @@ export async function editMessageStream(
 
   return fullText;
 }
+
+// Star chats==========
+
+export const toggleChatStar = (chatId) =>
+  api.patch(`/chat/${chatId}/star`);

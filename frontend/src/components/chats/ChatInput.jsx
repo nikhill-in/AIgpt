@@ -1,7 +1,7 @@
 import { useState } from "react";
 import TokenSizeSelect from "./TokenSizeSelect";
 
-export default function ChatInput({ onSend, disabled }) {
+export default function ChatInput({ onSend, disabled, onProClick }) {
   const [value, setValue] = useState("");
   const [maxTokens, setMaxTokens] = useState("Short");
 
@@ -21,7 +21,6 @@ export default function ChatInput({ onSend, disabled }) {
 
   return (
     <div className="flex flex-col gap-2 border-t border-[#e5e5e8] dark:border-[#26262c] bg-[#f7f7f8] dark:bg-[#0a0a0c] p-3 sm:p-4">
-
       {/* Textarea + Send button row */}
       <div className="flex items-end gap-2">
         <textarea
@@ -59,10 +58,15 @@ export default function ChatInput({ onSend, disabled }) {
 
       {/* Token size row — separate row below for clean responsive layout */}
       <div className="flex items-center gap-2 px-1">
-        <span className="text-xs text-[#6b6b73] dark:text-[#8a8a92]">Response size:</span>
-        <TokenSizeSelect value={maxTokens} onChange={setMaxTokens} />
+        <span className="text-xs text-[#6b6b73] dark:text-[#8a8a92]">
+          Response effort:
+        </span>
+        <TokenSizeSelect
+          value={maxTokens}
+          onChange={setMaxTokens}
+          onProClick={onProClick}
+        />
       </div>
-
     </div>
   );
 }

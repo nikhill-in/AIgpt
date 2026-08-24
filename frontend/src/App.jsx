@@ -1,13 +1,13 @@
 import { Routes, Route } from "react-router-dom";
 import "./styles/global.css";
-import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
+import { AuthProvider} from "./context/AuthContext.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import MainPage from "./pages/MainPage.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 
 
  function AppContent() {
-  const { authLoading } = useAuth();
+  const { authLoading } = AuthProvider.useAuth();
 
   if (authLoading) {
     return (
