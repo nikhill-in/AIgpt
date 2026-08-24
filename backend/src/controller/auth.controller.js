@@ -34,11 +34,7 @@ export const register = async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Email and password are required" });
-    }
+   
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -69,7 +65,7 @@ export const register = async (req, res) => {
     console.error(err);
     return res.status(500).json({
       status: false,
-      message: "Something went wrong. Please try again later",
+      message: "Somethinga went wrong. Please try again later",
     });
   }
 };
@@ -81,11 +77,7 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Email and password are required" });
-    }
+    
 
     const user = await User.findOne({ email });
     if (!user) {

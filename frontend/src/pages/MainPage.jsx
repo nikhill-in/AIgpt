@@ -1,53 +1,42 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import Sidebar from "../components/Sidebar";
 import ChatHeader from "../components/chats/ChatHeader";
 import MessageBubble from "../components/chats/MessageBubble";
 import ChatInput from "../components/chats/ChatInput";
-import Sidebar from "../components/Sidebar";
 
-import {
-  getChatMessages,
-  sendMessageStream,
-  editMessageStream,
-} from "../api/chat";
-
-import { proUser } from "../api/auth";
 import { AuthProvider } from "../context/AuthContext";
-
-function revealGradually(chunk, onChar, speedMs = 15) {
-  return new Promise((resolve) => {
-    let i = 0;
-
-    const interval = setInterval(() => {
-      if (i >= chunk.length) {
-        clearInterval(interval);
-        resolve();
-        return;
-      }
-
-      onChar(chunk[i++]);
-    }, speedMs);
-  });
-}
+import { proUser } from "../api/auth";
+import { useChat } from "../hooks/useChat";
 
 export default function MainPage() {
-  const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentChatId, setCurrentChatId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [tSize, setTSize] = useState(700);
+  const [tokenSize, setTokenSize] = useState("Short");
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    () => window.innerWidth < 768,
+  );
+
+  const messagesContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const { refreshAuth } = AuthProvider.useAuth();
 
-  const isSendingRef = useRef(false);
+  const {
+    messages,
+    isLoading,
+    currentChatId,
+    isSendingRef,
+    newChat,
+    selectChat,
+    sendMessage,
+    editMessage,
+  } = useChat();
 
-  const handleNewChat = () => {
-    if (isSendingRef.current) return;
-
-    setCurrentChatId(null);
-    setMessages([]);
-  };
+  // -------------------------
+  // Pro
+  // -------------------------
 
   const handlePro = async () => {
     try {
@@ -56,182 +45,135 @@ export default function MainPage() {
     } catch (err) {
       console.error(
         "User update failed:",
-        err.response?.data?.message || err.message,
+        err?.response?.data?.message || err?.message,
       );
     }
   };
 
-  const handleSelectChat = async (chatId) => {
-    if (isSendingRef.current) return;
+  // -------------------------
+  // Mobile breakpoint
+  // -------------------------
 
-    setCurrentChatId(chatId);
-    setIsLoading(true);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
 
-    try {
-      setMessages(await getChatMessages(chatId));
-    } catch (err) {
-      console.error("Error fetching chat messages:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    window.addEventListener("resize", handleResize);
 
-  const updateLastMessage = (content) => {
-    setMessages((prev) => {
-      const updated = [...prev];
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
-      updated[updated.length - 1] = {
-        ...updated[updated.length - 1],
-        content,
-      };
+  // -------------------------
+  // Scroll helpers
+  // -------------------------
 
-      return updated;
+  const scrollToBottom = (behavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior,
+      block: "end",
     });
   };
 
-  const addAssistantMessage = () => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: "",
-        createdAt: new Date().toISOString(),
-      },
-    ]);
+  const handleMessagesScroll = (e) => {
+    const element = e.currentTarget;
+
+    const distanceFromBottom =
+      element.scrollHeight -
+      element.scrollTop -
+      element.clientHeight;
+
+    setShowScrollButton(distanceFromBottom > 200);
   };
 
-  const handleStreamError = (err) => {
-    console.error("Message generation failed:", err);
+  // Auto-scroll only when user is already near the bottom
+  useEffect(() => {
+    const container = messagesContainerRef.current;
 
-    setMessages((prev) => [
-      ...prev.slice(0, -1),
-      {
-        role: "assistant",
-        content: err.message || "Something went wrong. Please try again.",
-        createdAt: new Date().toISOString(),
-      },
-    ]);
-  };
+    if (!container) return;
 
-  const streamResponse = async (streamFn, onChatId) => {
-    let assistantText = "";
+    const distanceFromBottom =
+      container.scrollHeight -
+      container.scrollTop -
+      container.clientHeight;
 
-    await streamFn(async (token) => {
-      await revealGradually(token, (char) => {
-        assistantText += char;
-        updateLastMessage(assistantText);
-      });
-    }, onChatId);
-  };
-
-  const handleSend = async (text, size) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "user",
-        content: text,
-        createdAt: new Date().toISOString(),
-      },
-    ]);
-
-    addAssistantMessage();
-
-    setIsLoading(true);
-    isSendingRef.current = true;
-
-    try {
-      await streamResponse(
-        (onToken, onChatId) =>
-          sendMessageStream(currentChatId, text, onToken, onChatId, size),
-        (newChatId) => {
-          if (!currentChatId) {
-            setCurrentChatId(newChatId);
-          }
-        },
-      );
-    } catch (err) {
-      handleStreamError(err);
-    } finally {
-      setIsLoading(false);
-      isSendingRef.current = false;
+    if (distanceFromBottom < 200) {
+      scrollToBottom("smooth");
     }
+  }, [messages]);
+
+  // -------------------------
+  // Sidebar
+  // -------------------------
+
+  const toggleSidebar = () => {
+    if (isSendingRef.current) return;
+
+    setSidebarOpen((prev) => !prev);
   };
 
-  const handleEdit = async (messageId, newContent) => {
-    const editIndex = messages.findIndex((m) => m._id === messageId);
-
-    if (editIndex === -1) return;
-
-    setMessages((prev) => [
-      ...prev.slice(0, editIndex),
-      {
-        role: "user",
-        content: newContent,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        role: "assistant",
-        content: "",
-        createdAt: new Date().toISOString(),
-      },
-    ]);
-
-    setIsLoading(true);
-    isSendingRef.current = true;
-
-    try {
-      await streamResponse(
-        (onToken) =>
-          editMessageStream(messageId, newContent, onToken, () => {}, tSize),
-        () => {},
-      );
-    } catch (err) {
-      handleStreamError(err);
-    } finally {
-      setIsLoading(false);
-      isSendingRef.current = false;
-    }
-  };
+  // -------------------------
+  // Render
+  // -------------------------
 
   return (
-    <div className="flex h-screen bg-[#f7f7f8] dark:bg-[#0a0a0c]">
+    <div className="flex h-screen overflow-hidden bg-[#f7f7f8] dark:bg-[#0a0a0c]">
       <Sidebar
         isOpen={sidebarOpen}
-        onToggle={() => {
-          if (isSendingRef.current) return;
-          setSidebarOpen((prev) => !prev);
-        }}
-        onSelectChat={handleSelectChat}
-        onNewChat={handleNewChat}
+        isMobile={isMobile}
+        onToggle={toggleSidebar}
+        onSelectChat={selectChat}
+        onNewChat={newChat}
         selectedChatId={currentChatId}
+        onChatSelected={() => {
+          if (isMobile) {
+            setSidebarOpen(false);
+          }
+        }}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-       <ChatHeader
-  onHistoryClick={() => {
-    if (isSendingRef.current) return;
-    setSidebarOpen((prev) => !prev);
-  }}
-  onProClick={handlePro}
-  profileMenuOpen={profileMenuOpen}
-  onProfileMenuChange={setProfileMenuOpen}
-/>
+        <ChatHeader
+          onHistoryClick={toggleSidebar}
+          onProClick={handlePro}
+          profileMenuOpen={profileMenuOpen}
+          onProfileMenuChange={setProfileMenuOpen}
+        />
 
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
+        {/* ONLY THIS AREA SCROLLS */}
+        <div
+          ref={messagesContainerRef}
+          onScroll={handleMessagesScroll}
+          className="
+            relative
+            flex min-h-0 flex-1
+            flex-col gap-3
+            overflow-y-auto
+            px-4 py-4
+            sm:px-6
+          "
+        >
           {messages.length === 0 ? (
             <div className="flex flex-1 items-center justify-center text-[#6b6b73] dark:text-[#8a8a92]">
               Start a conversation
             </div>
           ) : (
-            messages.map((msg, i) => (
+            messages.map((msg, index) => (
               <MessageBubble
-                key={msg._id || i}
+                key={msg._id || index}
                 role={msg.role}
                 content={msg.content}
                 createdAt={msg.createdAt}
                 onEdit={
                   msg.role === "user"
-                    ? (newContent) => handleEdit(msg._id, newContent)
+                    ? (newContent) =>
+                        editMessage(
+                          msg._id,
+                          newContent,
+                          tokenSize,
+                        )
                     : undefined
                 }
               />
@@ -243,16 +185,240 @@ export default function MainPage() {
               Thinking...
             </div>
           )}
+
+          {/* Bottom target */}
+          <div ref={messagesEndRef} />
+
+          {/* Go to bottom */}
+          {showScrollButton && (
+            <button
+              type="button"
+              onClick={() => scrollToBottom("smooth")}
+              className="
+                sticky bottom-4 left-1/2 z-20
+                self-center
+                -translate-x-1/2
+                rounded-full
+                border border-[#e5e7eb]
+                bg-white/95
+                px-4 py-2
+                text-sm font-medium
+                text-[#374151]
+                shadow-[0_8px_30px_rgba(0,0,0,0.12)]
+                backdrop-blur
+                transition
+                animate-bounce
+                hover:-translate-y-0.5
+                hover:shadow-xl
+                dark:border-[#2a2a32]
+                dark:bg-[#18181d]/95
+                dark:text-[#f5f5f7]
+              "
+            >
+              ↓ Go to bottom
+            </button>
+          )}
         </div>
 
         <ChatInput
-  onSend={handleSend}
-  disabled={isLoading}
-  tSize={tSize}
-  onTSizeChange={setTSize}
-  onProClick={() => setProfileMenuOpen(true)}
-/>
+          onSend={sendMessage}
+          disabled={isLoading}
+          tokenSize={tokenSize}
+          onTokenSizeChange={setTokenSize}
+          onProClick={() => setProfileMenuOpen(true)}
+        />
       </div>
     </div>
   );
 }
+
+
+// import { useEffect, useState, useRef } from "react";
+// import Sidebar from "../components/Sidebar";
+// import ChatHeader from "../components/chats/ChatHeader";
+// import MessageBubble from "../components/chats/MessageBubble";
+// import ChatInput from "../components/chats/ChatInput";
+// import { AuthProvider } from "../context/AuthContext";
+// import { proUser } from "../api/auth";
+// import { useChat } from "../hooks/useChat";
+
+// export default function MainPage() {
+//   const [sidebarOpen, setSidebarOpen] = useState(false);
+//   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+//   const [tokenSize, setTokenSize] = useState("Short");
+//   const messagesEndRef = useRef(null);
+//   const messagesContainerRef = useRef(null);
+
+// const [showScrollButton, setShowScrollButton] = useState(false);
+//   const { refreshAuth } = AuthProvider.useAuth(); // correct — not AuthProvider.useAuth()
+
+//   const scrollToBottom = () => {
+//     messagesEndRef.current?.scrollIntoView({
+//       behavior: "smooth",
+//       block: "end",
+//     });
+//   };
+//   const {
+//     messages,
+//     isLoading,
+//     currentChatId,
+//     isSendingRef,
+//     newChat,
+//     selectChat,
+//     sendMessage,
+//     editMessage,
+//   } = useChat();
+
+//   const handlePro = async () => {
+//     try {
+//       await proUser();
+//       await refreshAuth(); // refreshAuth must exist in AuthContext
+//     } catch (err) {
+//       console.error(
+//         "User update failed:",
+//         err?.response?.data?.message || err?.message,
+//       );
+//     }
+//   };
+
+//   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+//   useEffect(() => {
+//     messagesEndRef.current?.scrollIntoView({
+//       behavior: "smooth",
+//       block: "end",
+//     });
+//   }, [messages]);
+
+//   useEffect(() => {
+//     const handleResize = () => {
+//       setIsMobile(window.innerWidth < 768);
+//     };
+
+//     window.addEventListener("resize", handleResize);
+
+//     return () => window.removeEventListener("resize", handleResize);
+//   }, []);
+
+//   const toggleSidebar = () => {
+//     if (isSendingRef.current) return;
+//     setSidebarOpen((prev) => !prev);
+//   };
+
+//   return (
+//     <div
+//   ref={messagesContainerRef}
+//   onScroll={(e) => {
+//     const element = e.currentTarget;
+
+//     const distanceFromBottom =
+//       element.scrollHeight - element.scrollTop - element.clientHeight;
+
+//     setShowScrollButton(distanceFromBottom > 200);
+//   }}
+//   className="relative flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4"
+// >
+//     <div className="flex h-screen bg-[#f7f7f8] dark:bg-[#0a0a0c]">
+//       <Sidebar
+//         isOpen={sidebarOpen}
+//         isMobile={isMobile}
+//         onToggle={() => {
+//           if (isSendingRef.current) return;
+//           setSidebarOpen((prev) => !prev);
+//         }}
+//         onSelectChat={selectChat}
+//         onNewChat={newChat}
+//         selectedChatId={currentChatId}
+//         onChatSelected={() => {
+//           if (isMobile) setSidebarOpen(false);
+//         }}
+//       />
+
+//       <div className="flex min-w-0 flex-1 flex-col">
+//         <ChatHeader
+//           onHistoryClick={toggleSidebar}
+//           onProClick={handlePro}
+//           profileMenuOpen={profileMenuOpen}
+//           onProfileMenuChange={setProfileMenuOpen}
+//         />
+
+//         <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
+//           {messages.length === 0 ? (
+//             <div className="flex flex-1 items-center justify-center text-[#6b6b73] dark:text-[#8a8a92]">
+//               Start a conversation
+//             </div>
+//           ) : (
+//             messages.map((msg, i) => (
+//               <MessageBubble
+//                 key={msg._id || i}
+//                 role={msg.role}
+//                 content={msg.content}
+//                 createdAt={msg.createdAt}
+//                 onEdit={
+//                   msg.role === "user"
+//                     ? (newContent) => handleEdit(msg._id, newContent)
+//                     : undefined
+//                 }
+//               />
+//             ))
+//           )}
+
+//           {isLoading && (
+//             <div className="text-sm text-[#6b6b73] dark:text-[#8a8a92]">
+//               Thinking...
+//             </div>
+//           )}
+
+//           {/* Scroll target */}
+//           <div ref={messagesEndRef} />
+//         </div>
+
+//         <ChatInput
+//           onSend={sendMessage}
+//           disabled={isLoading}
+//           value={tokenSize}
+//           onChange={setTokenSize}
+//           onProClick={() => setProfileMenuOpen(true)}
+//         />
+//       </div>
+//     </div>
+//     <div ref={messagesEndRef} />
+//     {showScrollButton && (
+//   <button
+//     type="button"
+//     onClick={() => {
+//       messagesEndRef.current?.scrollIntoView({
+//         behavior: "smooth",
+//         block: "end",
+//       });
+//     }}
+//     className="
+//       absolute
+//       bottom-6
+//       left-1/2
+//       z-20
+//       -translate-x-1/2
+//       rounded-full
+//       border
+//       border-[#e5e7eb]
+//       bg-white
+//       px-4
+//       py-2
+//       text-sm
+//       font-medium
+//       text-[#374151]
+//       shadow-lg
+//       transition
+//       hover:-translate-y-0.5
+//       hover:shadow-xl
+//       dark:border-[#2a2a32]
+//       dark:bg-[#18181d]
+//       dark:text-[#f5f5f7]
+//     "
+//   >
+//     ↓ Go to bottom
+//   </button>
+// )}
+//     </div>
+//   );
+// }

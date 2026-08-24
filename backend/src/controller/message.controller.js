@@ -4,6 +4,7 @@ import Message from "../model/message.model.js";
 import ApiError from "../utils/ApiError.js";
 import catchAsync from "../utils/catchAsync.js";
 import { getTokenSize } from "../helpers/token.helper.js";
+import { User } from "../model/user.model.js";
 
 const ALLOWED_ROLES = ["pro"];
 
@@ -18,14 +19,17 @@ export const sendMessage = catchAsync(async (req, res) => {
     throw new ApiError(401, "Please login to continue");
   }
   
+  let userr =  await User.findOne({_id: userId});
+  req.user.role= userr.role;
   
   if (!content) {
     throw new ApiError(400, "Content is required");
   }
-  
+
+
   const tokenSize = getTokenSize(tSize, req.user.role);
 
-  let chat = chatId ? await Chat.findOne({ _id: chatId, user: userId }) : null;
+  let chat = chatId ? await Chat.findOne({ _id: chatId, user: userId}) : null;
 
   if (chatId && !chat) {
     throw new ApiError(404, "Chat not found");

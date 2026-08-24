@@ -22,9 +22,11 @@ import { AuthProvider } from "../context/AuthContext";
 
 export default function Sidebar({
   isOpen,
+  isMobile,
   onToggle,
   onSelectChat,
   onNewChat,
+  onChatSelected,
   selectedChatId,
 }) {
   const { logout } = AuthProvider.useAuth();
@@ -52,7 +54,7 @@ export default function Sidebar({
 
       try {
         const chats = await getChats();
-        if (active) setHistory(chats);
+        setHistory(Array.isArray(chats) ? chats : []);
       } catch (err) {
         console.error("Failed to load chats:", err);
         if (active) setHistory([]);
@@ -93,9 +95,7 @@ export default function Sidebar({
     try {
       await deleteChatMessages(deleteChatId);
 
-      setHistory((prev) =>
-        prev.filter((chat) => chat._id !== deleteChatId),
-      );
+      setHistory((prev) => prev.filter((chat) => chat._id !== deleteChatId));
 
       if (selectedChatId === deleteChatId) {
         onNewChat();
@@ -135,9 +135,7 @@ export default function Sidebar({
     e.stopPropagation();
 
     const trimmed = draftTitle.trim();
-    const currentTitle = history.find(
-      (chat) => chat._id === chatId,
-    )?.title;
+    const currentTitle = history.find((chat) => chat._id === chatId)?.title;
 
     if (!trimmed || trimmed === currentTitle) {
       cancelEditing();
@@ -149,9 +147,7 @@ export default function Sidebar({
 
       setHistory((prev) =>
         prev.map((chat) =>
-          chat._id === chatId
-            ? { ...chat, title: updated.title }
-            : chat,
+          chat._id === chatId ? { ...chat, title: updated.title } : chat,
         ),
       );
     } catch (err) {
@@ -179,9 +175,7 @@ export default function Sidebar({
     // Optimistic update
     setHistory((prev) =>
       prev.map((item) =>
-        item._id === chat._id
-          ? { ...item, starred: !item.starred }
-          : item,
+        item._id === chat._id ? { ...item, starred: !item.starred } : item,
       ),
     );
 
@@ -192,18 +186,14 @@ export default function Sidebar({
 
       setHistory((prev) =>
         prev.map((item) =>
-          item._id === chat._id
-            ? { ...item, starred: updated.starred }
-            : item,
+          item._id === chat._id ? { ...item, starred: updated.starred } : item,
         ),
       );
     } catch (err) {
       // Roll back optimistic update
       setHistory((prev) =>
         prev.map((item) =>
-          item._id === chat._id
-            ? { ...item, starred: chat.starred }
-            : item,
+          item._id === chat._id ? { ...item, starred: chat.starred } : item,
         ),
       );
 
@@ -280,7 +270,10 @@ export default function Sidebar({
           <>
             <button
               type="button"
-              onClick={() => onSelectChat(chat._id)}
+              onClick={() => {
+                onSelectChat(chat._id);
+                onChatSelected?.();
+              }}
               className="
                 min-w-0 flex-1 truncate px-3 py-2.5
                 text-left text-sm
@@ -305,9 +298,7 @@ export default function Sidebar({
                 type="button"
                 onClick={(e) => handleStar(e, chat)}
                 disabled={isStarUpdating}
-                aria-label={
-                  chat.starred ? "Unstar chat" : "Star chat"
-                }
+                aria-label={chat.starred ? "Unstar chat" : "Star chat"}
                 title={chat.starred ? "Unstar" : "Star"}
                 className={`
                   flex h-7 w-7 items-center justify-center
@@ -321,10 +312,7 @@ export default function Sidebar({
                   disabled:opacity-50
                 `}
               >
-                <Star
-                  size={14}
-                  fill={chat.starred ? "currentColor" : "none"}
-                />
+                <Star size={14} fill={chat.starred ? "currentColor" : "none"} />
               </button>
 
               <button
@@ -366,47 +354,103 @@ export default function Sidebar({
   };
 
   return (
-    <aside
-      className={`
-        flex h-screen shrink-0 flex-col justify-between
-        border-r border-[#e5e7eb]
-        bg-white
-        dark:border-[#26262c] dark:bg-[#141418]
-        transition-[width] duration-300 ease-in-out
-        ${isOpen ? "w-72" : "w-16"}
-      `}
-    >
-      {/* Top controls */}
-      <div className="flex flex-col gap-1.5 p-2">
+    <>
+      {isMobile && isOpen && (
         <button
           type="button"
-          onClick={onNewChat}
-          aria-label="New chat"
-          title="New chat"
-          className="
-            flex h-10 items-center gap-2 rounded-xl px-3
-            text-[#4b5563]
-            transition
-            hover:bg-[#f3f4f6] hover:text-[#111827]
-            dark:text-[#9ca3af]
-            dark:hover:bg-[#22222a] dark:hover:text-white
-          "
-        >
-          <PlusIcon size={18} className="shrink-0" />
-
-          {isOpen && (
-            <span className="whitespace-nowrap text-sm font-medium">
-              New Chat
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
+          aria-label="Close sidebar"
           onClick={onToggle}
-          aria-label={isOpen ? "Close sidebar" : "Open history"}
-          title={isOpen ? "Close sidebar" : "History"}
-          className="
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+        />
+      )}
+
+      <aside
+        className={`
+    flex h-screen shrink-0 flex-col
+    border-r border-[#e5e7eb]
+    bg-white
+    dark:border-[#26262c] dark:bg-[#141418]
+    transition-all duration-300 ease-in-out
+
+    ${
+      isMobile
+        ? isOpen
+          ? "absolute left-0 top-0 z-50 h-full w-72"
+          : "relative z-50 w-14"
+        : isOpen
+          ? "relative w-72"
+          : "relative w-16"
+    }
+  `}
+      >
+        {/* Top controls */}
+
+        <div className="flex flex-col  gap-1.5 p-2">
+          <button
+            type="button"
+            onClick={() => {
+              onNewChat();
+              onChatSelected?.();
+            }}
+            aria-label="New chat"
+            title="New chat"
+            className="
+      flex h-10 w-full items-center gap-2 rounded-xl px-3
+      text-[#4b5563]
+      transition
+      hover:bg-[#f3f4f6] hover:text-[#111827]
+      dark:text-[#d4d4d8]
+      dark:hover:bg-[#22222a]
+      dark:hover:text-white
+    "
+          >
+            <PlusIcon size={18} className="shrink-0" />
+
+            {isOpen && (
+              <span className="whitespace-nowrap text-sm font-medium">
+                New Chat
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={isOpen ? "Close history" : "Open history"}
+            title={isOpen ? "Close history" : "History"}
+            className="
+      flex h-10 w-full items-center gap-2 rounded-xl px-3
+      text-[#4b5563]
+      transition
+      hover:bg-[#f3f4f6] hover:text-[#111827]
+      dark:text-[#d4d4d8]
+      dark:hover:bg-[#22222a]
+      dark:hover:text-white
+    "
+          >
+            {isOpen ? (
+              <X size={18} className="shrink-0" />
+            ) : (
+              <HistoryIcon size={18} className="shrink-0" />
+            )}
+
+            {isOpen && (
+              <span className="whitespace-nowrap text-sm font-medium">
+                History
+              </span>
+            )}
+          </button>
+        </div>
+        {/* <div className="flex flex-col gap-1.5 p-2">
+          <button
+            type="button"
+            onClick={() => {
+              onNewChat();
+              onChatSelected?.();
+            }}
+            aria-label="New chat"
+            title="New chat"
+            className="
             flex h-10 items-center gap-2 rounded-xl px-3
             text-[#4b5563]
             transition
@@ -414,33 +458,54 @@ export default function Sidebar({
             dark:text-[#9ca3af]
             dark:hover:bg-[#22222a] dark:hover:text-white
           "
-        >
-          {isOpen ? (
-            <X size={18} className="shrink-0" />
-          ) : (
-            <HistoryIcon size={18} className="shrink-0" />
-          )}
+          >
+            <PlusIcon size={18} className="shrink-0" />
 
-          {isOpen && (
-            <span className="text-sm font-medium">History</span>
-          )}
-        </button>
-      </div>
+            {isOpen && (
+              <span className="whitespace-nowrap text-sm font-medium">
+                New Chat
+              </span>
+            )}
+          </button>
 
-      {isOpen && (
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-          {loading ? (
-            <div className="px-2 py-8 text-center text-sm text-[#6b7280] dark:text-[#8a8a92]">
-              Loading chats...
-            </div>
-          ) : (
-            <>
-              {/* Starred */}
-              <section>
-                <button
-                  type="button"
-                  onClick={() => setShowStarred((prev) => !prev)}
-                  className="
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={isOpen ? "Close sidebar" : "Open history"}
+            title={isOpen ? "Close sidebar" : "History"}
+            className="
+            flex h-10 items-center gap-2 rounded-xl px-3
+            text-[#4b5563]
+            transition
+            hover:bg-[#f3f4f6] hover:text-[#111827]
+            dark:text-[#9ca3af]
+            dark:hover:bg-[#22222a] dark:hover:text-white
+          "
+          >
+            {isOpen ? (
+              <X size={18} className="shrink-0" />
+            ) : (
+              <HistoryIcon size={18} className="shrink-0" />
+            )}
+
+            {isOpen && <span className="text-sm font-medium">History</span>}
+          </button>
+        </div> */}
+
+        {isOpen && (
+          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+            {loading ? (
+              <div className="px-2 py-8 text-center text-sm text-[#6b7280] dark:text-[#8a8a92]">
+                Loading chats...
+              </div>
+            ) : (
+              <>
+                {/* Starred */}
+                <section>
+                  <button
+                    type="button"
+                    onClick={() => setShowStarred((prev) => !prev)}
+                    className="
                     flex w-full items-center justify-between
                     rounded-lg px-2 py-2
                     text-xs font-semibold uppercase tracking-wide
@@ -448,102 +513,98 @@ export default function Sidebar({
                     transition hover:text-[#4b5563]
                     dark:text-[#71717a] dark:hover:text-[#d4d4d8]
                   "
-                >
-                  <span className="flex items-center gap-2">
-                    <Star size={13} fill="currentColor" />
-                    Starred
-                    {starredChats.length > 0 && (
-                      <span className="text-[10px]">
-                        {starredChats.length}
-                      </span>
-                    )}
-                  </span>
+                  >
+                    <span className="flex items-center gap-2">
+                      <Star size={13} fill="currentColor" />
+                      Starred
+                      {starredChats.length > 0 && (
+                        <span className="text-[10px]">
+                          {starredChats.length}
+                        </span>
+                      )}
+                    </span>
 
-                  <ChevronDown
-                    size={14}
-                    className={`
+                    <ChevronDown
+                      size={14}
+                      className={`
                       transition-transform duration-200
                       ${showStarred ? "" : "-rotate-90"}
                     `}
-                  />
-                </button>
+                    />
+                  </button>
 
-                {showStarred && (
-                  <div className="space-y-0.5">
-                    {starredChats.length === 0 ? (
-                      <p className="px-3 py-2 text-xs text-[#9ca3af] dark:text-[#71717a]">
-                        No starred chats
-                      </p>
-                    ) : (
-                      starredChats.map(renderChat)
-                    )}
+                  {showStarred && (
+                    <div className="space-y-0.5">
+                      {starredChats.length === 0 ? (
+                        <p className="px-3 py-2 text-xs text-[#9ca3af] dark:text-[#71717a]">
+                          No starred chats
+                        </p>
+                      ) : (
+                        starredChats.map(renderChat)
+                      )}
+                    </div>
+                  )}
+                </section>
+
+                {/* Recent chats */}
+                <section className="mt-4">
+                  <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-[#9ca3af] dark:text-[#71717a]">
+                    Recent
                   </div>
-                )}
-              </section>
 
-              {/* Recent chats */}
-              <section className="mt-4">
-                <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-[#9ca3af] dark:text-[#71717a]">
-                  Recent
-                </div>
+                  {normalChats.length === 0 ? (
+                    <p className="px-3 py-2 text-xs text-[#9ca3af] dark:text-[#71717a]">
+                      No other chats
+                    </p>
+                  ) : (
+                    <div className="space-y-0.5">
+                      {normalChats.map(renderChat)}
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+          </div>
+        )}
 
-                {normalChats.length === 0 ? (
-                  <p className="px-3 py-2 text-xs text-[#9ca3af] dark:text-[#71717a]">
-                    No other chats
-                  </p>
-                ) : (
-                  <div className="space-y-0.5">
-                    {normalChats.map(renderChat)}
-                  </div>
-                )}
-              </section>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="border-t border-[#e5e7eb] p-2 dark:border-[#26262c]">
-        <button
-          type="button"
-          onClick={logout}
-          aria-label="Logout"
-          title="Logout"
-          className="
+        {/* Footer */}
+        <div className="mt-auto border-t border-[#e5e7eb] p-2 dark:border-[#26262c]">
+          <button
+            type="button"
+            onClick={logout}
+            aria-label="Logout"
+            title="Logout"
+            className="
             flex h-10 w-full items-center gap-2 rounded-xl px-3
             text-red-500 transition
             hover:bg-red-50
             dark:text-red-400
             dark:hover:bg-red-500/10
           "
-        >
-          <LogOutIcon size={18} className="shrink-0" />
+          >
+            <LogOutIcon size={18} className="shrink-0" />
 
-          {isOpen && (
-            <span className="text-sm font-medium">
-              Logout
-            </span>
-          )}
-        </button>
-      </div>
+            {isOpen && <span className="text-sm font-medium">Logout</span>}
+          </button>
+        </div>
 
-      {/* Delete modal */}
-      {deleteChatId && (
-        <div
-          className="
+        {/* Delete modal */}
+        {deleteChatId && (
+          <div
+            className="
             fixed inset-0 z-[100]
             flex items-center justify-center
             bg-black/40 px-4
             backdrop-blur-sm
           "
-          onClick={cancelDelete}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-chat-title"
-            onClick={(e) => e.stopPropagation()}
-            className="
+            onClick={cancelDelete}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-chat-title"
+              onClick={(e) => e.stopPropagation()}
+              className="
               w-full max-w-md rounded-2xl
               border border-[#e5e7eb]
               bg-white p-6
@@ -552,34 +613,34 @@ export default function Sidebar({
               dark:bg-[#18181d]
               dark:shadow-[0_24px_80px_rgba(0,0,0,0.5)]
             "
-          >
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10">
-              <TrashIcon size={20} className="text-red-500" />
-            </div>
-
-            <h2
-              id="delete-chat-title"
-              className="text-lg font-semibold text-[#111827] dark:text-[#f5f5f7]"
             >
-              Delete chat?
-            </h2>
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-500/10">
+                <TrashIcon size={20} className="text-red-500" />
+              </div>
 
-            <p className="mt-2 text-sm leading-6 text-[#6b7280] dark:text-[#8a8a92]">
-              Are you sure you want to delete{" "}
-              <span className="font-medium text-[#111827] dark:text-[#f5f5f7]">
-                "{deleteChatTitle}"
-              </span>
-              ?
-              <br />
-              This action cannot be undone.
-            </p>
+              <h2
+                id="delete-chat-title"
+                className="text-lg font-semibold text-[#111827] dark:text-[#f5f5f7]"
+              >
+                Delete chat?
+              </h2>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={cancelDelete}
-                disabled={isDeleting}
-                className="
+              <p className="mt-2 text-sm leading-6 text-[#6b7280] dark:text-[#8a8a92]">
+                Are you sure you want to delete{" "}
+                <span className="font-medium text-[#111827] dark:text-[#f5f5f7]">
+                  "{deleteChatTitle}"
+                </span>
+                ?
+                <br />
+                This action cannot be undone.
+              </p>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={cancelDelete}
+                  disabled={isDeleting}
+                  className="
                   rounded-lg px-4 py-2
                   text-sm font-medium
                   text-[#6b7280]
@@ -590,15 +651,15 @@ export default function Sidebar({
                   dark:text-[#a1a1aa]
                   dark:hover:bg-[#26262c]
                 "
-              >
-                Cancel
-              </button>
+                >
+                  Cancel
+                </button>
 
-              <button
-                type="button"
-                onClick={confirmDelete}
-                disabled={isDeleting}
-                className="
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="
                   min-w-[90px] rounded-lg
                   bg-red-500 px-4 py-2
                   text-sm font-medium text-white
@@ -606,18 +667,17 @@ export default function Sidebar({
                   disabled:cursor-not-allowed
                   disabled:opacity-60
                 "
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </button>
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </aside>
+        )}
+      </aside>
+    </>
   );
 }
-
-
 
 // import { useState, useEffect } from "react";
 // import {
@@ -757,7 +817,7 @@ export default function Sidebar({
 //         <button
 //           onClick={onNewChat}
 //           aria-label="New chat"
-//           title="New chat" 
+//           title="New chat"
 //           className="flex h-10 items-center gap-2 rounded-lg px-3 text-[#6b6b73] transition hover:bg-[#eaeaec] hover:text-[#1a1a1e] dark:text-[#8a8a92] dark:hover:bg-[#22222a] dark:hover:text-[#f5f5f7]"
 //         >
 //           <PlusIcon size={18} className="shrink-0" />

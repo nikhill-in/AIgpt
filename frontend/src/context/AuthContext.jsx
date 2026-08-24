@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   loginUser,
   logoutUser,
@@ -10,17 +12,38 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [tokenOptions, setTokenOptions] = useState([]); 
+  const [tokenOptions, setTokenOptions] = useState([]);
   const [isPro, setIsPro] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  // Get user + token options together
+  const navigate = useNavigate();
+
+  // Clear local auth state and redirect after an authenticated request gets 401
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setTokenOptions([]);
+      setIsPro(false);
+      setAuthError(null);
+
+      navigate("/", { replace: true });
+    };
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+
+    return () => {
+      window.removeEventListener(
+        "auth:unauthorized",
+        handleUnauthorized,
+      );
+    };
+  }, [navigate]);
+
+  // Load user + current token permissions
   const refreshAuth = async () => {
-    const [userRes, tokenRes] = await Promise.all([
-      getCurrentUser(),
-      getTokenOptions(),
-    ]);
+    const userRes = await getCurrentUser();
+    const tokenRes = await getTokenOptions();
 
     setUser(userRes.data.user);
     setTokenOptions(tokenRes.data.options);
@@ -33,7 +56,7 @@ export function AuthProvider({ children }) {
     };
   };
 
-  // Check authentication when app starts
+  // Initial authentication check
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -58,7 +81,6 @@ export function AuthProvider({ children }) {
 
       setUser(res.data.user);
 
-      // Get current token permissions after login
       const tokenRes = await getTokenOptions();
 
       setTokenOptions(tokenRes.data.options);
@@ -67,7 +89,7 @@ export function AuthProvider({ children }) {
       return res.data.user;
     } catch (err) {
       setAuthError(
-        err.response?.data?.message || "Login failed"
+        err.response?.data?.message || "Login failed",
       );
 
       throw err;
@@ -81,10 +103,11 @@ export function AuthProvider({ children }) {
       setUser(null);
       setTokenOptions([]);
       setIsPro(false);
+      setAuthError(null);
+      navigate("/", { replace: true });
     }
   };
 
-  // Update user locally
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
   };
@@ -113,27 +136,66 @@ AuthProvider.useAuth = () => useContext(AuthContext);
 
 
 // import { createContext, useContext, useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+
 // import {
 //   loginUser,
 //   logoutUser,
 //   getCurrentUser,
+//   getTokenOptions,
 // } from "../api/auth";
 
 // const AuthContext = createContext(null);
 
 // export function AuthProvider({ children }) {
 //   const [user, setUser] = useState(null);
+//   const [tokenOptions, setTokenOptions] = useState([]);
+//   const [isPro, setIsPro] = useState(false);
 //   const [authLoading, setAuthLoading] = useState(true);
 //   const [authError, setAuthError] = useState(null);
 
-//   // Check existing authentication on app startup
+//   // Get user + token options together
+//   const refreshAuth = async () => {
+//     const [userRes, tokenRes] = await Promise.all([
+//       getCurrentUser(),
+//       getTokenOptions(),
+//     ]);
+
+//     setUser(userRes.data.user);
+//     setTokenOptions(tokenRes.data.options);
+//     setIsPro(tokenRes.data.isPro);
+
+//     return {
+//       user: userRes.data.user,
+//       options: tokenRes.data.options,
+//       isPro: tokenRes.data.isPro,
+//     };
+//   };
+
+//   const navigate = useNavigate();
+//   useEffect(() => {
+//     const handleUnauthorized = () => {
+//       setUser(null);
+//       setTokenOptions([]);
+//       setIsPro(false);
+
+//       navigate("/", { replace: true });
+//     };
+
+//     window.addEventListener("auth:unauthorized", handleUnauthorized);
+
+//     return () =>
+//       window.removeEventListener("auth:unauthorized", handleUnauthorized);
+//   }, [navigate]);
+//   // Check authentication when app starts
 //   useEffect(() => {
 //     const checkAuth = async () => {
 //       try {
-//         const res = await getCurrentUser();
-//         setUser(res.data.user);
+//         await refreshAuth();
 //       } catch {
 //         setUser(null);
+//         setTokenOptions([]);
+//         setIsPro(false);
 //       } finally {
 //         setAuthLoading(false);
 //       }
@@ -150,11 +212,15 @@ AuthProvider.useAuth = () => useContext(AuthContext);
 
 //       setUser(res.data.user);
 
+//       // Get current token permissions after login
+//       const tokenRes = await getTokenOptions();
+
+//       setTokenOptions(tokenRes.data.options);
+//       setIsPro(tokenRes.data.isPro);
+
 //       return res.data.user;
 //     } catch (err) {
-//       setAuthError(
-//         err.response?.data?.message || "Login failed"
-//       );
+//       setAuthError(err.response?.data?.message || "Login failed");
 
 //       throw err;
 //     }
@@ -165,10 +231,12 @@ AuthProvider.useAuth = () => useContext(AuthContext);
 //       await logoutUser();
 //     } finally {
 //       setUser(null);
+//       setTokenOptions([]);
+//       setIsPro(false);
 //     }
 //   };
 
-//   // Update user everywhere immediately without another API request
+//   // Update user locally
 //   const updateUser = (updatedUser) => {
 //     setUser(updatedUser);
 //   };
@@ -178,11 +246,14 @@ AuthProvider.useAuth = () => useContext(AuthContext);
 //       value={{
 //         user,
 //         isLoggedIn: !!user,
+//         isPro,
+//         tokenOptions,
 //         authLoading,
 //         authError,
 //         login,
 //         logout,
 //         updateUser,
+//         refreshAuth,
 //       }}
 //     >
 //       {children}
@@ -190,4 +261,4 @@ AuthProvider.useAuth = () => useContext(AuthContext);
 //   );
 // }
 
-// export const useAuth = () => useContext(AuthContext);
+// AuthProvider.useAuth = () => useContext(AuthContext);

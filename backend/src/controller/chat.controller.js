@@ -7,27 +7,34 @@ import catchAsync from "../utils/catchAsync.js";
 
 export const Chats = catchAsync(async (req, res) => {
   const chats = await Chat.find({ user: req.user.id }).sort({ updatedAt: -1 });
-  res.json(chats);
+  res.status(200).json({ success: true, message: "Done..", chats });
 });
 
 // get Chat messages==============
 
 export const getChatMessages = catchAsync(async (req, res) => {
-  const chat = await Chat.findOne({ _id: req.params.chatId, user: req.user.id });
+  const chat = await Chat.findOne({
+    _id: req.params.chatId,
+    user: req.user.id,
+  });
 
   if (!chat) {
     throw new ApiError(404, "Chat not found");
   }
 
-  const messages = await Message.find({ chat: chat._id }).sort({ createdAt: 1 });
-  res.json(messages);
+  const messages = await Message.find({ chat: chat._id }).sort({
+    createdAt: 1,
+  });
+  res.status(200).json({ success: true, message: "Done..", messages });
 });
 
 // delete chat====================
 export const deleteChat = catchAsync(async (req, res) => {
-
-  console.log("on delete ",req.params.chatId )
-  const chat = await Chat.findOne({ _id: req.params.chatId, user: req.user.id }); // missing user filter — IDOR again
+  console.log("on delete ", req.params.chatId);
+  const chat = await Chat.findOne({
+    _id: req.params.chatId,
+    user: req.user.id,
+  }); // missing user filter — IDOR again
 
   if (!chat) {
     throw new ApiError(404, "Chat not found");
@@ -50,14 +57,16 @@ export const renameChat = catchAsync(async (req, res) => {
   const chat = await Chat.findOneAndUpdate(
     { _id: req.params.chatId, user: req.user.id },
     { title: title.trim() },
-    { new: true }
+    { new: true },
   );
 
   if (!chat) {
     throw new ApiError(404, "Chat not found");
   }
 
-  res.json(chat);
+  res
+    .status(200)
+    .json({ success: true, message: "Chat Rename Successfull..", chat });
 });
 
 // get usage state======================
@@ -70,7 +79,9 @@ export const getUsageStats = catchAsync(async (req, res) => {
     }),
   ]);
 
-  res.json({ chatCount, messageCount });
+  res
+    .status(200)
+    .json({ success: true, message: "Done..", chatCount, messageCount });
 });
 
 // get chats with pagination=============
@@ -88,8 +99,36 @@ export const getChats = catchAsync(async (req, res) => {
     Chat.countDocuments({ user: req.user.id }),
   ]);
 
-  res.json({
-    chats,
-    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  res
+    .status(200)
+    .json({
+      success: true,
+      message: "Done..",
+      chats,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+});
+
+// toggle chat ===========
+export const toggleChatStar = catchAsync(async (req, res) => {
+  console.log("hi wanna touch..")
+  const { chatId } = req.params;
+  const userId = req.user.id;
+
+  const chat = await Chat.findOne({
+    _id: chatId,
+    user: userId,
+  });
+
+  if (!chat) {
+    throw new ApiError(404, "Chat not found");
+  }
+
+  chat.starred = !chat.starred;
+  await chat.save();
+
+  res.status(200).json({
+    status: true,
+    starred: chat.starred,
   });
 });
