@@ -19,8 +19,8 @@ export const sendMessage = catchAsync(async (req, res) => {
     throw new ApiError(401, "Please login to continue");
   }
   
-  let userr =  await User.findOne({_id: userId});
-  req.user.role= userr.role;
+  let user =  await User.findOne({_id: userId});
+  req.user.role= user.role;
   
   if (!content) {
     throw new ApiError(400, "Content is required");
