@@ -1,13 +1,7 @@
-// let IS_PROD = true;
+const servers = import.meta.env.VITE_API_URL;
 
-// const servers = IS_PROD
-//   ? import.meta.env.PROD_API_URL
-//   : import.meta.env.VITE_API_URL;
-
-// export default servers;
-
-
-const servers = import.meta.env.PROD_API_URL;
+console.log("VITE_API_URL:", servers);
+console.log("MODE:", import.meta.env.MODE);
 
 if (!servers) {
   throw new Error("VITE_API_URL is not configured");
