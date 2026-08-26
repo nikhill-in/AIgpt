@@ -65,7 +65,7 @@ export default function ChatHeader({
         <img
           src={isDark ? logoDark : logoLight}
           alt="ZoomCon"
-          className="h-10 w-auto sm:h-11 md:h-18"
+          className="h-16 w-auto  md:h-18"
         />
       </Link>
 
