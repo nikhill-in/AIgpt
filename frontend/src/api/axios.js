@@ -1,9 +1,9 @@
 import axios from "axios";
 import { notifyUnauthorized } from "../utils/authEvents";
-import servers from "../environment";
+// import servers from "../environment";
 
 const api = axios.create({
-  baseURL: servers,
+  baseURL: "https://aigptbackend.onrender.com/api",
   withCredentials: true,
 });
 
