@@ -83,10 +83,10 @@ export default function LandingPage() {
             src={isDark ? logoDark : logoLight}
             alt="AIgpt"
             className="
-              h-11
+              h-16
               w-auto
               object-contain
-              sm:h-12
+              md:h-18
             "
           />
         </button>
