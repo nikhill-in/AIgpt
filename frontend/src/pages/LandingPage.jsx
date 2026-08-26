@@ -11,7 +11,7 @@ import { AuthProvider } from "../context/AuthContext.jsx";
 import LoginModal from "../components/LoginModel.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 
-import logoDark from "../assets/logoDark.png";
+import logoDark from "../assets/LogoDark.png";
 import logoLight from "../assets/logoLight.png";
 
 export default function LandingPage() {

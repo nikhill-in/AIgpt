@@ -13,7 +13,7 @@ import { AuthProvider } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { registerUser } from "../api/auth";
 
-import logoDark from "../assets/logoDark.png";
+import logoDark from "../assets/LogoDark.png";
 import logoLight from "../assets/logoLight.png";
 
 export default function LoginModal({
