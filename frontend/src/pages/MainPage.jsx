@@ -113,8 +113,8 @@ export default function MainPage() {
   // -------------------------
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-[#f7f7f8] dark:bg-[#0a0a0c]">
-      <Sidebar
+<div className="fixed inset-0 flex overflow-hidden bg-[#f7f7f8] dark:bg-[#0a0a0c]">
+        <Sidebar
         isOpen={sidebarOpen}
         isMobile={isMobile}
         onToggle={toggleSidebar}
