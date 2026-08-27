@@ -25,11 +25,12 @@ export default function MainPage() {
     messages,
     isLoading,
     currentChatId,
-    isSendingRef,
+    // isSendingRef,
     newChat,
     selectChat,
     sendMessage,
     editMessage,
+    stopGeneration,
   } = useChat();
 
   // -------------------------
@@ -103,7 +104,7 @@ export default function MainPage() {
   // -------------------------
 
   const toggleSidebar = () => {
-    if (isSendingRef.current) return;
+    // if (isSendingRef.current) return;
 
     setSidebarOpen((prev) => !prev);
   };
@@ -113,8 +114,8 @@ export default function MainPage() {
   // -------------------------
 
   return (
-<div className="fixed inset-0 flex overflow-hidden bg-[#f7f7f8] dark:bg-[#0a0a0c]">
-        <Sidebar
+    <div className="fixed inset-0 flex overflow-hidden bg-[#f7f7f8] dark:bg-[#0a0a0c]">
+      <Sidebar
         isOpen={sidebarOpen}
         isMobile={isMobile}
         onToggle={toggleSidebar}
@@ -212,7 +213,8 @@ export default function MainPage() {
 
         <ChatInput
           onSend={sendMessage}
-          disabled={isLoading}
+          onStop={stopGeneration}
+          isStreaming={isLoading}
           tokenSize={tokenSize}
           onTokenSizeChange={setTokenSize}
           onProClick={() => setProfileMenuOpen(true)}

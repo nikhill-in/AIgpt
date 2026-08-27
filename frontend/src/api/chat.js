@@ -172,55 +172,169 @@ export async function editMessageStream(
   onToken,
   onChatId,
   tSize,
+  signal,
 ) {
   const response = await fetch(`${servers}/user/edit`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messageId, content, tSize }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messageId,
+      content,
+      tSize,
+    }),
+    signal,
   });
+
+  if (!response.ok) {
+    throw new Error(
+      `Request failed: ${response.status}`,
+    );
+  }
+
+  if (!response.body) {
+    throw new Error(
+      "Streaming response is unavailable.",
+    );
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  let buffer = "";
+  let fullText = "";
+
+  try {
+    while (true) {
+      const { done, value } =
+        await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, {
+        stream: true,
+      });
+
+      const lines = buffer.split(/\r?\n/);
+
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (!trimmed.startsWith("data:")) {
+          continue;
+        }
+
+        const payload = trimmed
+          .slice(5)
+          .trim();
+
+        if (!payload) {
+          continue;
+        }
+
+        if (payload === "[DONE]") {
+          return fullText;
+        }
+
+        try {
+          const json = JSON.parse(payload);
+
+          if (json.chatId) {
+            onChatId?.(json.chatId);
+          }
+
+          if (typeof json.text === "string") {
+            fullText += json.text;
+
+            await onToken?.(json.text);
+          }
+
+          if (json.error) {
+            throw new Error(json.error);
+          }
+        } catch (error) {
+          console.error(
+            "Bad SSE payload from server:",
+            error,
+            payload,
+          );
+        }
+      }
+    }
+
+    return fullText;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw error;
+    }
+
+    throw error;
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+// export async function editMessageStream(
+//   messageId,
+//   content,
+//   onToken,
+//   onChatId,
+//   tSize,
+// ) {
+//   const response = await fetch(`${servers}/user/edit`, {
+//     method: "POST",
+//     credentials: "include",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({ messageId, content, tSize }),
+//   });
 
      
 
 
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+//   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let fullText = "";
+//   const reader = response.body.getReader();
+//   const decoder = new TextDecoder();
+//   let buffer = "";
+//   let fullText = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+//   while (true) {
+//     const { done, value } = await reader.read();
+//     if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop();
+//     buffer += decoder.decode(value, { stream: true });
+//     const lines = buffer.split("\n");
+//     buffer = lines.pop();
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("data: ")) continue;
+//     for (const line of lines) {
+//       const trimmed = line.trim();
+//       if (!trimmed.startsWith("data: ")) continue;
 
-      const payload = trimmed.slice(6).trim();
-      if (payload === "[DONE]") continue;
+//       const payload = trimmed.slice(6).trim();
+//       if (payload === "[DONE]") continue;
 
-      try {
-        const json = JSON.parse(payload);
-        if (json.chatId) onChatId?.(json.chatId);
-        if (json.text) {
-          fullText += json.text;
-          await onToken?.(json.text);
-        }
-        if (json.error) throw new Error(json.error);
-      } catch (e) {
-        console.error("Bad SSE payload from server:", e, payload);
-      }
-    }
-  }
+//       try {
+//         const json = JSON.parse(payload);
+//         if (json.chatId) onChatId?.(json.chatId);
+//         if (json.text) {
+//           fullText += json.text;
+//           await onToken?.(json.text);
+//         }
+//         if (json.error) throw new Error(json.error);
+//       } catch (e) {
+//         console.error("Bad SSE payload from server:", e, payload);
+//       }
+//     }
+//   }
   
-  return fullText;
-}
+//   return fullText;
+// }
 
 // Star chats==========
 export const toggleChatStar = async (chatId) => {

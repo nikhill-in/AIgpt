@@ -1,5 +1,10 @@
 import { useCallback, useRef, useState } from "react";
-import { getChatMessages, sendMessageStream, editMessageStream } from "../api/chat";
+
+import {
+  getChatMessages,
+  sendMessageStream,
+  editMessageStream,
+} from "../api/chat";
 
 const createMessage = (role, content = "") => ({
   role,
@@ -7,47 +12,58 @@ const createMessage = (role, content = "") => ({
   createdAt: new Date().toISOString(),
 });
 
-// revealGradually — kept from before, prevents the "dhapp se aata hai" problem
-function revealGradually(chunk, onChar, speedMs = 15) {
-  return new Promise((resolve) => {
-    let i = 0;
-    const interval = setInterval(() => {
-      onChar(chunk[i]);
-      i++;
-      if (i >= chunk.length) {
-        clearInterval(interval);
-        resolve();
-      }
-    }, speedMs);
-  });
-}
-
 export function useChat() {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(null);
+
+  // Used to prevent conflicting chat operations.
   const isSendingRef = useRef(false);
+
+  // Controller for the currently active stream.
+  const abortControllerRef = useRef(null);
+
+  // --------------------------------------------------
+  // Update the currently streaming assistant message
+  // --------------------------------------------------
 
   const updateLastMessage = useCallback((content) => {
     setMessages((prev) => {
-      if (!prev.length) return prev;
+      if (!prev.length) {
+        return prev;
+      }
+
       const updated = [...prev];
-      updated[updated.length - 1] = { ...updated[updated.length - 1], content };
+
+      const lastMessage = updated[updated.length - 1];
+
+      updated[updated.length - 1] = {
+        ...lastMessage,
+        content,
+      };
+
       return updated;
     });
   }, []);
+
+  // --------------------------------------------------
+  // Stream response
+  // --------------------------------------------------
 
   const streamResponse = useCallback(
     async (streamFn, onNewChatId) => {
       let assistantText = "";
 
       await streamFn(
-        async (token) => {
-          // reveal gradually per token — prevents all-at-once dump
-          await revealGradually(token, (char) => {
-            assistantText += char;
-            updateLastMessage(assistantText);
-          });
+        (token) => {
+          // IMPORTANT:
+          // No artificial delay.
+          //
+          // Gemini/SSE already provides chunks.
+          // Render each received chunk immediately.
+          assistantText += token;
+
+          updateLastMessage(assistantText);
         },
         onNewChatId,
       );
@@ -55,43 +71,80 @@ export function useChat() {
     [updateLastMessage],
   );
 
-//   const handleStreamError = useCallback((err) => {
-//     if (err?.response?.status === 401) return; // interceptor handles redirect
-//     console.error("Stream error:", err?.response?.data?.message || err?.message);
-//     setMessages((prev) => [
-//       ...prev.slice(0, -1),
-//       createMessage("assistant", err?.response?.data?.message || "Something went wrong. Please try again."),
-//     ]);
-//   }, []);
+  // --------------------------------------------------
+  // Stream error handling
+  // --------------------------------------------------
 
-const handleStreamError = useCallback((err) => {
-  if (err?.status === 401 || err?.response?.status === 401) {
-    return;
-  }
+  const handleStreamError = useCallback((err) => {
+    // Abort is an intentional user action.
+    if (err?.name === "AbortError") {
+      return;
+    }
 
-  const message =
-    err?.response?.data?.message ||
-    err?.message ||
-    "Something went wrong. Please try again.";
+    if (
+      err?.status === 401 ||
+      err?.response?.status === 401
+    ) {
+      return;
+    }
 
-  console.error("Stream error:", message);
+    const message =
+      err?.response?.data?.message ||
+      err?.message ||
+      "Something went wrong. Please try again.";
 
-  setMessages((prev) => [
-    ...prev.slice(0, -1),
-    createMessage("assistant", message),
-  ]);
-}, []);
+    console.error("Stream error:", message);
 
+    setMessages((prev) => {
+      if (!prev.length) {
+        return prev;
+      }
+
+      return [
+        ...prev.slice(0, -1),
+        createMessage("assistant", message),
+      ];
+    });
+  }, []);
+
+  // --------------------------------------------------
+  // Run streaming request
+  // --------------------------------------------------
 
   const runStreamingAction = useCallback(
     async (streamFn, onNewChatId) => {
+      // Cancel an existing request first.
+      abortControllerRef.current?.abort();
+
+      const controller = new AbortController();
+
+      abortControllerRef.current = controller;
+
       setIsLoading(true);
       isSendingRef.current = true;
+
       try {
-        await streamResponse(streamFn, onNewChatId);
+        await streamResponse(
+          (onToken, chatIdCallback) =>
+            streamFn(
+              onToken,
+              chatIdCallback,
+              controller.signal,
+            ),
+          onNewChatId,
+        );
       } catch (err) {
-        handleStreamError(err);
+        // Ignore intentional cancellation.
+        if (err?.name !== "AbortError") {
+          handleStreamError(err);
+        }
       } finally {
+        // Only clear the controller if it still belongs to
+        // this request.
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+        }
+
         setIsLoading(false);
         isSendingRef.current = false;
       }
@@ -99,59 +152,179 @@ const handleStreamError = useCallback((err) => {
     [streamResponse, handleStreamError],
   );
 
+  // --------------------------------------------------
+  // Stop current generation
+  // --------------------------------------------------
+
+  const stopGeneration = useCallback(() => {
+    if (!abortControllerRef.current) {
+      return;
+    }
+
+    abortControllerRef.current.abort();
+
+    abortControllerRef.current = null;
+
+    setIsLoading(false);
+    isSendingRef.current = false;
+  }, []);
+
+  // --------------------------------------------------
+  // New chat
+  // --------------------------------------------------
+
   const newChat = useCallback(() => {
-    if (isSendingRef.current) return;
+    // Don't allow creating a new chat while generation is
+    // running unless the current generation is explicitly stopped.
+    if (isSendingRef.current) {
+      return;
+    }
+
     setCurrentChatId(null);
     setMessages([]);
   }, []);
 
-  const selectChat = useCallback(async (chatId) => {
-    if (isSendingRef.current) return;
-    setCurrentChatId(chatId);
-    setIsLoading(true);
-    try {
-      const msgs = await getChatMessages(chatId);
-      setMessages(Array.isArray(msgs) ? msgs : []); // guard against unexpected shape
-    } catch (err) {
-      console.error("Error fetching messages:", err?.response?.data?.message || err?.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  // --------------------------------------------------
+  // Select existing chat
+  // --------------------------------------------------
+
+  const selectChat = useCallback(
+    async (chatId) => {
+      if (isSendingRef.current) {
+        return;
+      }
+
+      setCurrentChatId(chatId);
+      setIsLoading(true);
+
+      try {
+        const msgs = await getChatMessages(chatId);
+
+        setMessages(
+          Array.isArray(msgs) ? msgs : [],
+        );
+      } catch (err) {
+        console.error(
+          "Error fetching messages:",
+          err?.response?.data?.message ||
+            err?.message,
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
+  // --------------------------------------------------
+  // Send new message
+  // --------------------------------------------------
 
   const sendMessage = useCallback(
     async (text, size) => {
+      const trimmedText = text?.trim();
+
+      if (!trimmedText) {
+        return;
+      }
+
+      /*
+       * If another generation is running, stop it first.
+       *
+       * This allows:
+       *
+       * current stream
+       *      ↓
+       * user sends another prompt
+       *      ↓
+       * abort current stream
+       *      ↓
+       * start new stream
+       */
+
+      if (isSendingRef.current) {
+        abortControllerRef.current?.abort();
+      }
+
       setMessages((prev) => [
         ...prev,
-        createMessage("user", text),
+        createMessage("user", trimmedText),
         createMessage("assistant"),
       ]);
 
       await runStreamingAction(
-        (onToken, onNewChatId) =>
-          sendMessageStream(currentChatId, text, onToken, onNewChatId, size),
+        (
+          onToken,
+          onNewChatId,
+          signal,
+        ) =>
+          sendMessageStream(
+            currentChatId,
+            trimmedText,
+            onToken,
+            onNewChatId,
+            size,
+            signal,
+          ),
         (newChatId) => {
-          if (!currentChatId) setCurrentChatId(newChatId);
+          if (!currentChatId && newChatId) {
+            setCurrentChatId(newChatId);
+          }
         },
       );
     },
     [currentChatId, runStreamingAction],
   );
 
+  // --------------------------------------------------
+  // Edit message
+  // --------------------------------------------------
+
   const editMessage = useCallback(
-    async (messageId, newContent, tokenSize) => {
-      const editIndex = messages.findIndex((m) => m._id === messageId);
-      if (editIndex === -1) return;
+    async (
+      messageId,
+      newContent,
+      tokenSize,
+    ) => {
+      if (isSendingRef.current) {
+        return;
+      }
+
+      const trimmedContent = newContent?.trim();
+
+      if (!trimmedContent) {
+        return;
+      }
+
+      const editIndex = messages.findIndex(
+        (message) =>
+          message._id === messageId,
+      );
+
+      if (editIndex === -1) {
+        return;
+      }
 
       setMessages((prev) => [
         ...prev.slice(0, editIndex),
-        createMessage("user", newContent),
+        createMessage("user", trimmedContent),
         createMessage("assistant"),
       ]);
 
       await runStreamingAction(
-        (onToken) =>
-          editMessageStream(messageId, newContent, onToken, () => {}, tokenSize),
+        (
+          onToken,
+          onNewChatId,
+          signal,
+        ) =>
+          editMessageStream(
+            messageId,
+            trimmedContent,
+            onToken,
+            onNewChatId,
+            tokenSize,
+            signal,
+          ),
         () => {},
       );
     },
@@ -163,188 +336,14 @@ const handleStreamError = useCallback((err) => {
     isLoading,
     currentChatId,
     isSendingRef,
+
     newChat,
     selectChat,
+
     sendMessage,
     editMessage,
+
+    stopGeneration,
   };
 }
 
-
-// import { useCallback, useRef, useState } from "react";
-
-// import {
-//   getChatMessages,
-//   sendMessageStream,
-//   editMessageStream,
-// } from "../api/chat";
-
-// const createMessage = (role, content = "") => ({
-//   role,
-//   content,
-//   createdAt: new Date().toISOString(),
-// });
-
-// export function useChat() {
-//   const [messages, setMessages] = useState([]);
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [currentChatId, setCurrentChatId] = useState(null);
-
-//   const isSendingRef = useRef(false);
-
-//   const updateLastMessage = useCallback((content) => {
-//     setMessages((prev) => {
-//       if (!prev.length) return prev;
-
-//       const updated = [...prev];
-
-//       updated[updated.length - 1] = {
-//         ...updated[updated.length - 1],
-//         content,
-//       };
-
-//       return updated;
-//     });
-//   }, []);
-
-//   const streamResponse = useCallback(
-//     async (streamFn, onChatId) => {
-//       let assistantText = "";
-
-//       await streamFn(async (token) => {
-//         assistantText += token;
-
-//         updateLastMessage(assistantText);
-//       }, onChatId);
-//     },
-//     [updateLastMessage],
-//   );
-
-//   const handleStreamError = useCallback((err) => {
-//     if (err.response?.status === 401) return;
-
-//     console.error(
-//       "Message generation failed:",
-//       err.response?.data?.message || err.message,
-//     );
-
-//     setMessages((prev) => [
-//       ...prev.slice(0, -1),
-//       createMessage(
-//         "assistant",
-//         err.response?.data?.message ||
-//           err.message ||
-//           "Something went wrong. Please try again.",
-//       ),
-//     ]);
-//   }, []);
-
-//   const runStreamingAction = useCallback(
-//     async (streamFn, onChatId) => {
-//       setIsLoading(true);
-//       isSendingRef.current = true;
-
-//       try {
-//         await streamResponse(streamFn, onChatId);
-//       } catch (err) {
-//         handleStreamError(err);
-//       } finally {
-//         setIsLoading(false);
-//         isSendingRef.current = false;
-//       }
-//     },
-//     [streamResponse, handleStreamError],
-//   );
-
-//   const newChat = useCallback(() => {
-//     if (isSendingRef.current) return;
-
-//     setCurrentChatId(null);
-//     setMessages([]);
-//   }, []);
-
-//   const selectChat = useCallback(async (chatId) => {
-//     if (isSendingRef.current) return;
-
-//     setCurrentChatId(chatId);
-//     setIsLoading(true);
-
-//     try {
-//       setMessages(await getChatMessages(chatId));
-//     } catch (err) {
-//       console.error(
-//         "Error fetching chat messages:",
-//         err.response?.data?.message || err.message,
-//       );
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   }, []);
-
-//   const sendMessage = useCallback(
-//     async (text, size) => {
-//       setMessages((prev) => [
-//         ...prev,
-//         createMessage("user", text),
-//         createMessage("assistant"),
-//       ]);
-
-//       await runStreamingAction(
-//         (onToken, onChatId) =>
-//           sendMessageStream(
-//             currentChatId,
-//             text,
-//             onToken,
-//             onChatId,
-//             size,
-//           ),
-//         (newChatId) => {
-//           if (!currentChatId) {
-//             setCurrentChatId(newChatId);
-//           }
-//         },
-//       );
-//     },
-//     [currentChatId, runStreamingAction],
-//   );
-
-//   const editMessage = useCallback(
-//     async (messageId, newContent, tokenSize) => {
-//       const editIndex = messages.findIndex(
-//         (message) => message._id === messageId,
-//       );
-
-//       if (editIndex === -1) return;
-
-//       setMessages((prev) => [
-//         ...prev.slice(0, editIndex),
-//         createMessage("user", newContent),
-//         createMessage("assistant"),
-//       ]);
-
-//       await runStreamingAction(
-//         (onToken) =>
-//           editMessageStream(
-//             messageId,
-//             newContent,
-//             onToken,
-//             () => {},
-//             tokenSize,
-//           ),
-//         () => {},
-//       );
-//     },
-//     [messages, runStreamingAction],
-//   );
-
-//   return {
-//     messages,
-//     isLoading,
-//     currentChatId,
-//     isSendingRef,
-//     newChat,
-//     selectChat,
-//     sendMessage,
-//     editMessage,
-//   };
-// }
