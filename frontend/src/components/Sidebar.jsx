@@ -19,6 +19,7 @@ import {
 } from "../api/chat";
 
 import { AuthProvider } from "../context/AuthContext";
+import SidebarSkeleton from "./SidebarSkeleton";
 
 export default function Sidebar({
   isOpen,
@@ -452,9 +453,7 @@ export default function Sidebar({
         {isOpen && (
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
             {loading ? (
-              <div className="px-2 py-8 text-center text-sm text-[#6b7280] dark:text-[#8a8a92]">
-                Loading chats...
-              </div>
+              <SidebarSkeleton />
             ) : (
               <>
                 {/* Starred */}
