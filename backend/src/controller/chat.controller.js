@@ -30,7 +30,7 @@ export const getChatMessages = catchAsync(async (req, res) => {
 
 // delete chat====================
 export const deleteChat = catchAsync(async (req, res) => {
-  console.log("on delete ", req.params.chatId);
+
   const chat = await Chat.findOne({
     _id: req.params.chatId,
     user: req.user.id,
@@ -111,7 +111,6 @@ export const getChats = catchAsync(async (req, res) => {
 
 // toggle chat ===========
 export const toggleChatStar = catchAsync(async (req, res) => {
-  console.log("hi wanna touch..")
   const { chatId } = req.params;
   const userId = req.user.id;
 

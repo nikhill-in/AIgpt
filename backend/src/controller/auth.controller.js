@@ -73,7 +73,6 @@ export const register = async (req, res) => {
 // Login User ==============
 
 export const login = async (req, res) => {
-  console.log("Trying to Login...");
   try {
     const { email, password } = req.body;
 
@@ -181,7 +180,7 @@ export const logout = async (req, res) => {
 // getMe Controller ================
 
 export const getMe = catchAsync(async (req, res) => {
-  console.log("this is req. user", req.user);
+
   const user = await User.findById(req.user.id).select("-password");
 
   if (!user) {

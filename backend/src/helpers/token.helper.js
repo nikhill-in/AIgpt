@@ -7,7 +7,7 @@ const TOKEN_LIMITS = {
 };
 
 export const getTokenSize = (tSize, role) => {
-      console.log("tSize", tSize);
+    
 
   const tokenSize = TOKEN_LIMITS[tSize];
 
