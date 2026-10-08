@@ -28,15 +28,13 @@ export default function SidebarSkeleton() {
 function SkeletonChat() {
   return (
     <div className="flex h-10 items-center gap-1 rounded-xl px-2">
-      <div className="h-3 flex-1 animate-pulse rounded bg-gray-200 dark:bg-[#29292f]" />
-      <div className="h-3 flex-1 animate-pulse rounded bg-gray-200 dark:bg-[#29292f]" />
+      <div className="h-7 flex-1 animate-pulse rounded bg-gray-200 dark:bg-[#29292f]" />
+      <div className="h-7 flex-1 animate-pulse rounded bg-gray-200 dark:bg-[#29292f]" />
 
       <div className="h-7 w-7 animate-pulse rounded-lg bg-gray-200 dark:bg-[#29292f]" />
       <div className="h-7 w-7 animate-pulse rounded-lg bg-gray-200 dark:bg-[#29292f]" />
       <div className="h-7 w-7 animate-pulse rounded-lg bg-gray-200 dark:bg-[#29292f]" />
-      <div className="h-7 w-7 animate-pulse rounded-lg bg-gray-200 dark:bg-[#29292f]" />
-      <div className="h-7 w-7 animate-pulse rounded-lg bg-gray-200 dark:bg-[#29292f]" />
-      <div className="h-7 w-7 animate-pulse rounded-lg bg-gray-200 dark:bg-[#29292f]" />
+
     </div>
   );
 }
